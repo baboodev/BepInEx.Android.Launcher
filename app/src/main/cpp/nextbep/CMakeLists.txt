@@ -23,6 +23,7 @@ add_library(nextbep SHARED
         src/utilities/soname.cpp
         src/utilities/library.cpp
         src/utilities/java.cpp
+        src/mono_sysnative.cpp
 )
 
 target_include_directories(nextbep PUBLIC include)

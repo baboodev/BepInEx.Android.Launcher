@@ -19,4 +19,15 @@ Branch: `heartopia-samsung-boot` (from `880c950` + known-good boot core).
 - Skip sphal ClassLoader link in `GameRuntime`.
 
 Verified vanilla (no Bugtopia): Product Name, Chainloader complete, login bridge, GLES Adreno, process alive.
-Remaining: Mono `System.Native` SONAME remap for HotFix DNS (still in tree as `soname.cpp`; wire carefully without reintroducing early dlopen hooks).
+
+## System.Native / HotFix DNS (follow-up)
+
+Wired in `mono_sysnative.cpp` (unique SONAME `libXdtSysNative.so` + `mono_dl_fallback_register`).
+
+| Do | Do not |
+|---|---|
+| Remap + `FORCE_LOAD` remapped copy | `DobbyHook` libc `dlopen` — THEMIS SIGTRAP via coreclr |
+| `mono_dl_fallback_register` after monosgen loads | `mono_dllmap_insert` from `jit_init` — SIGABRT on this Mono |
+| `install_themis_f000000a_guard` after themis preload | Early monosgen preload + jit_init Dobby |
+
+HotFix still logs `GetHostEntryForName` InvalidProgramException and falls back to the oversea pool; version HTTP fetch succeeds. Full bare-soname redirect needs a themis-safe path (not libc Dobby).

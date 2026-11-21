@@ -12,6 +12,8 @@
 #include <dotnet.h>
 #include <external/dobby.h>
 #include <utilities/java.h>
+#include <mono_sysnative.h>
+#include <themis_guard.h>
 #include <dlfcn.h>
 
 #define TAG "BepInExNative"
@@ -37,6 +39,9 @@ static bool execute_fusion_config(const FusionConfig &config)
             const char *err = th ? nullptr : dlerror();
             log_format(th ? LogLevel::INFO : LogLevel::WARN, TAG,
                        "Preload {}: {}", themis.string(), th ? "ok" : (err ? err : "fail"));
+            if (th) {
+                install_themis_f000000a_guard();
+            }
         }
     }
     // Heartopia Mono P/Invoke (DataCenter → mimalloc). nativeLibraryDir is empty
@@ -51,6 +56,10 @@ static bool execute_fusion_config(const FusionConfig &config)
                        "Preload {}: {}", mimalloc.string(), h ? "ok" : (err ? err : "fail"));
         }
     }
+    // Remap game System.Native to a unique SONAME so Mono HotFix DNS can bind
+    // without colliding with CoreCLR's already-loaded copy. Redirect hooks are
+    // armed later from main.cpp after Unity+il2cpp load.
+    mono_sysnative_prepare(gameLibsPath, codeCache);
 
     fs::path libUnity;
     fs::path patchedLibIl2Cpp;
