@@ -73,11 +73,7 @@ public final class GameRuntime {
         }
         String dexPath = String.join(File.pathSeparator, apks);
         ClassLoader gameLoader = new GameClassLoader(dexPath, libraryPath, fusionLoader);
-        // PathClassLoader's ctor does NOT call createClassloaderNamespace (only
-        // ClassLoaderFactory does). Without that, there is no sphal shared-lib link and
-        // vendor GL drivers fail to resolve from the game ns. Safe no-op on older OEMs.
-        NativeLibraryManager.ensureGraphicsLinkerNamespace(
-                gameLoader, gameContext, libraryPath, dexPath);
+        // Skip sphal ClassLoader link: on SM-S938B it dual-stacks EGL and breaks chooseConfig.
         gameClassLoader = gameLoader;
         return new ContextWrapper(gameContext) {
             @Override public ClassLoader getClassLoader() { return gameLoader; }
