@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- App -->
-    <string name="app_name">BepInEx Launcher</string>
+    <string name="app_name">Bugtopia</string>
 
     <!-- Navigation -->
     <string name="nav_games">Games</string>
@@ -176,6 +176,9 @@
     <string name="settings_title">Settings</string>
     <string name="settings_section_appearance">Appearance</string>
     <string name="settings_section_ingame">In-Game</string>
+    <string name="settings_section_account">Account</string>
+    <string name="settings_google_web_login">Google login (web)</string>
+    <string name="settings_google_web_login_desc">Open XD browser OAuth (PC-style). Bypasses GMS error 10 under the launcher.</string>
     <string name="settings_section_maintenance">Maintenance</string>
     <string name="settings_section_config">Config Files</string>
     <string name="settings_clear_bepinex">Clear BepInEx Files</string>
@@ -229,9 +232,9 @@
     <string name="lang_incomplete_message">The translation for your language is not complete. If you would like to help improve the localization, please visit [here](https://nextbep.github.io/guide/translations) to contribute.</string>
 
     <!-- About -->
-    <string name="about_title">BepInEx Android Launcher</string>
+    <string name="about_title">Bugtopia Launcher</string>
     <string name="about_description">A BepInEx loader for Unity IL2CPP games on Android</string>
-    <string name="about_disclaimer">⚠ BepInEx Launcher is not officially supported by the BepInEx project.</string>
+    <string name="about_disclaimer">Bugtopia Launcher is based on NextBep BepInEx.Android; not an official BepInEx release.</string>
     <string name="about_projects_section">Projects Used &amp; Referenced</string>
     <string name="about_project_bepinex_name">BepInEx</string>
     <string name="about_project_bepinex_desc">Unity IL2CPP modding framework — the core plugin loader. BepInEx 6.0.0-pre.2 by BepInEx team.</string>

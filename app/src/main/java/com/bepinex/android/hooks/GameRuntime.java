@@ -26,14 +26,18 @@ import java.util.WeakHashMap;
 
 import dalvik.system.PathClassLoader;
 import com.bepinex.android.tools.NativeLibraryManager;
+import com.bepinex.android.tools.FusionConfig;
 import com.bepinex.android.R;
 import com.bepinex.android.tools.CustomContextWrapper;
 
 public final class GameRuntime {
     private static android.app.Application gameApplication;
+    private static ClassLoader gameClassLoader;
     private GameRuntime() {}
 
     public static android.app.Application getGameApplication() { return gameApplication; }
+
+    public static ClassLoader getGameClassLoader() { return gameClassLoader; }
 
     public static void initializeApplication(Context gameContext, Context fusionContext)
             throws ReflectiveOperationException {
@@ -55,8 +59,26 @@ public final class GameRuntime {
         ArrayList<String> apks = new ArrayList<>();
         apks.add(info.sourceDir);
         if (info.splitSourceDirs != null) Collections.addAll(apks, info.splitSourceDirs);
-        ClassLoader gameLoader = new GameClassLoader(String.join(File.pathSeparator, apks),
-                info.nativeLibraryDir, fusionLoader);
+        // Keep the APK nativeLibraryDir in the search path. Replacing it entirely with
+        // game-libs alone yields an isolated linker namespace whose permitted_paths are
+        // only /data:/mnt/expand — on Android 16+/Adreno that blocks
+        // /vendor/lib64/egl/eglSubDriverAndroid.so and Unity dies with EGL_NOT_INITIALIZED.
+        String apkNativeDir = info.nativeLibraryDir != null ? info.nativeLibraryDir : "";
+        String libraryPath = apkNativeDir;
+        FusionConfig cfg = NativeLibraryManager.getRuntimeConfig();
+        if (cfg != null && cfg.gameLibraryDirectory != null && !cfg.gameLibraryDirectory.isEmpty()) {
+            libraryPath = apkNativeDir.isEmpty()
+                    ? cfg.gameLibraryDirectory
+                    : cfg.gameLibraryDirectory + File.pathSeparator + apkNativeDir;
+        }
+        String dexPath = String.join(File.pathSeparator, apks);
+        ClassLoader gameLoader = new GameClassLoader(dexPath, libraryPath, fusionLoader);
+        // PathClassLoader's ctor does NOT call createClassloaderNamespace (only
+        // ClassLoaderFactory does). Without that, there is no sphal shared-lib link and
+        // vendor GL drivers fail to resolve from the game ns. Safe no-op on older OEMs.
+        NativeLibraryManager.ensureGraphicsLinkerNamespace(
+                gameLoader, gameContext, libraryPath, dexPath);
+        gameClassLoader = gameLoader;
         return new ContextWrapper(gameContext) {
             @Override public ClassLoader getClassLoader() { return gameLoader; }
         };
@@ -119,22 +141,31 @@ public final class GameRuntime {
 
         @Override public Activity newActivity(ClassLoader loader, String name, Intent intent)
                 throws InstantiationException, IllegalAccessException, ClassNotFoundException {
-            intent.setExtrasClassLoader(gameContext.getClassLoader());
-            if (!InstrumentationHooks.isDynamicIntent(intent)) return original.newActivity(loader, name, intent);
+            // Host ClassLoader first: FusionConfig lives in the launcher package.
+            // Game ClassLoader cannot unparcel nextbep.config (returns null → native SIGABRT).
+            ClassLoader hostLoader = InstrumentationHooks.class.getClassLoader();
+            intent.setExtrasClassLoader(hostLoader);
+            if (!InstrumentationHooks.isDynamicIntent(intent)) {
+                intent.setExtrasClassLoader(gameContext.getClassLoader());
+                return original.newActivity(loader, name, intent);
+            }
             Intent target = InstrumentationHooks.resolveOriginalIntent(intent);
             if (target == null || target.getComponent() == null) {
                 throw new InstantiationException("Missing dynamic activity intent");
             }
             target = new Intent(target);
-            target.setExtrasClassLoader(gameContext.getClassLoader());
+            android.os.Parcelable nextConfig = null;
             if (intent.hasExtra(InstrumentationHooks.EXTRA_NEXT_CONFIG)) {
-                target.putExtra(InstrumentationHooks.EXTRA_NEXT_CONFIG,
-                        intent.<android.os.Parcelable>getParcelableExtra(InstrumentationHooks.EXTRA_NEXT_CONFIG));
+                nextConfig = intent.getParcelableExtra(InstrumentationHooks.EXTRA_NEXT_CONFIG);
             }
-            if (intent.hasExtra(InstrumentationHooks.EXTRA_TARGET_ORIENTATION)) {
-                target.putExtra(InstrumentationHooks.EXTRA_TARGET_ORIENTATION,
-                        intent.getIntExtra(InstrumentationHooks.EXTRA_TARGET_ORIENTATION,
-                                ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED));
+            int targetOrientation = intent.getIntExtra(InstrumentationHooks.EXTRA_TARGET_ORIENTATION,
+                    ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+            target.setExtrasClassLoader(gameContext.getClassLoader());
+            if (nextConfig != null) {
+                target.putExtra(InstrumentationHooks.EXTRA_NEXT_CONFIG, nextConfig);
+            }
+            if (targetOrientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) {
+                target.putExtra(InstrumentationHooks.EXTRA_TARGET_ORIENTATION, targetOrientation);
             }
             Activity activity = original.newActivity(gameContext.getClassLoader(),
                     target.getComponent().getClassName(), target);
@@ -231,6 +262,17 @@ public final class GameRuntime {
         private ActivityResult start(Class<?> targetType, Context who, IBinder contextThread,
                                      IBinder token, Object target, Intent intent, int requestCode,
                                      Bundle options, UserHandle user) {
+            // Stock GoogleSignImpl starts GMS with requestCode 9001; that fails with
+            // DEVELOPER_ERROR under the launcher cert. Divert to login-xdsdk web OAuth
+            // and later call AuthorizationCallback.signInSuccess with SignInToken.
+            try {
+                if (com.bepinex.android.auth.XdGoogleSignInBridge.tryIntercept(
+                        who, target, intent, requestCode)) {
+                    return null;
+                }
+            } catch (Throwable t) {
+                Log.e("GameRuntime", "Google SignIn web intercept failed", t);
+            }
             try {
                 Class<?>[] types = user == null
                         ? new Class<?>[] {Context.class, IBinder.class, IBinder.class, targetType, Intent.class, int.class, Bundle.class}

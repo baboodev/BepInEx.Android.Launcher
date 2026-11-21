@@ -1051,7 +1051,10 @@ fun BepInExNavHost(
                         onClearBepInEx = { onClearBepInEx(pkg) },
                         onClearDotnet = { onClearDotnet(pkg) },
                         onClearLibUnity = { onClearLibUnity(pkg) },
-                        onCopyGameResources = { onCopyGameResources(pkg) }
+                        onCopyGameResources = { onCopyGameResources(pkg) },
+                        onGoogleWebLogin = {
+                            com.bepinex.android.auth.XdGoogleWebAuth.start(gsContext)
+                        }
                     )
                 }
 

@@ -38,9 +38,13 @@ public class CustomContextWrapper extends ContextWrapper {
             this.applicationContext = gameApplication;
         }
         this.getApplicationInfo().dataDir = Utilities.getExternalGameDirectory(gameContext.getPackageName(), "PersistentData").getAbsolutePath();
-        // this prevents the game from resolving its own libraries
-        // that way we can override them properly with our own versions
-        this.getApplicationInfo().nativeLibraryDir = "";
+        // Point at extracted game-libs (extractNativeLibs=false leaves the real
+        // nativeLibraryDir empty). Fusion/cache overrides still win via
+        // NativeLibraryManager.findLibrary / pathList prepend.
+        FusionConfig cfg = NativeLibraryManager.getRuntimeConfig();
+        String gameLibs = (cfg != null && cfg.gameLibraryDirectory != null)
+                ? cfg.gameLibraryDirectory : "";
+        this.getApplicationInfo().nativeLibraryDir = gameLibs;
     }
 
     public Context getOriginalActivity() {
@@ -50,12 +54,52 @@ public class CustomContextWrapper extends ContextWrapper {
     /**
      * System services use the operation package for UID/permission checks.
      * The wrapped context must still expose the game's package name to game
-     * code, but Toast and similar services must identify the launcher process
-     * because this code runs under the launcher's UID.
+     * code, but Toast / WindowManager / Notification must identify the
+     * launcher process — this code runs under the launcher's UID. Android 11+
+     * ToastPresenter puts {@link #getPackageName()} into LayoutParams; if that
+     * is the game package, addWindow throws
+     * {@code SecurityException: Package <game> not in UID <launcher>} and kills
+     * the process (seen after Google login failure toast).
      */
     @Override
     public String getOpPackageName() {
         return fusionContext.getOpPackageName();
+    }
+
+    @Override
+    public String getPackageName() {
+        return packageNameForCaller();
+    }
+
+    // Context.getBasePackageName() exists at runtime (API 19+) but is hidden in
+    // some android.jar stubs — keep the override without @Override.
+    public String getBasePackageName() {
+        return packageNameForCaller();
+    }
+
+    private String packageNameForCaller() {
+        StackTraceElement[] stack = Thread.currentThread().getStackTrace();
+        for (StackTraceElement frame : stack) {
+            String cls = frame.getClassName();
+            if (cls.startsWith("com.bepinex.android.tools.CustomContextWrapper")
+                    || cls.equals("android.content.ContextWrapper")
+                    || cls.equals("android.content.Context")
+                    || cls.equals("android.app.ContextImpl")
+                    || cls.startsWith("java.")
+                    || cls.startsWith("dalvik.")
+                    || cls.startsWith("android.os.")) {
+                continue;
+            }
+            // Framework + Play/FB SDKs bind package name to the calling UID.
+            if (cls.startsWith("android.")
+                    || cls.startsWith("com.android.")
+                    || cls.startsWith("com.google.android.")
+                    || cls.startsWith("com.facebook.")) {
+                return fusionContext.getPackageName();
+            }
+            return gameContext.getPackageName();
+        }
+        return gameContext.getPackageName();
     }
 
 //    @Override

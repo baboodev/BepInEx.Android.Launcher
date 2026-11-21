@@ -9,6 +9,8 @@ set(LIB_FOLDER ${CMAKE_SOURCE_DIR}/../jniLibs/${CMAKE_ANDROID_ARCH_ABI})
 add_library(nextbep SHARED
         src/fusion.cpp
         src/fusion_config.cpp
+        src/spoof_cmdline.cpp
+        src/themis_guard.cpp
         src/dotnet.cpp
         src/exports.cpp
         src/logger.cpp
@@ -18,6 +20,7 @@ add_library(nextbep SHARED
         src/hooking/libunity.cpp
         src/utilities/asm.cpp
         src/utilities/elf.cpp
+        src/utilities/soname.cpp
         src/utilities/library.cpp
         src/utilities/java.cpp
 )

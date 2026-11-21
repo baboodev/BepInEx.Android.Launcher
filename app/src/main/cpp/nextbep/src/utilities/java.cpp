@@ -61,6 +61,28 @@ jclass find_class_in_app_classloader(JNIEnv *env, const char *className) {
 }
 
 jobject get_fusion_config(JNIEnv *env) {
+    // Prefer the in-process static holder (same ClassLoader as FusionConfig).
+    // Intent extras are lost when the game ClassLoader cannot unparcel the Parcelable.
+    jclass managerClass = find_class_in_app_classloader(env, "com/bepinex/android/tools/NativeLibraryManager");
+    if (managerClass) {
+        jmethodID getConfig = env->GetStaticMethodID(managerClass, "getRuntimeConfig",
+                                                     "()Lcom/bepinex/android/tools/FusionConfig;");
+        if (getConfig) {
+            jobject staticConfig = env->CallStaticObjectMethod(managerClass, getConfig);
+            if (staticConfig) {
+                env->DeleteLocalRef(managerClass);
+                log(LogLevel::INFO, TAG, "Loaded runtime config from NativeLibraryManager");
+                return staticConfig;
+            }
+            env->ExceptionClear();
+        } else {
+            env->ExceptionClear();
+        }
+        env->DeleteLocalRef(managerClass);
+    } else {
+        env->ExceptionClear();
+    }
+
     jobject activity = getUnityActivity(env);
     if (!activity) {
         log(LogLevel::ERROR, TAG, "Failed to get UnityActivity!");

@@ -16,6 +16,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.bepinex.android.R
+import com.bepinex.android.auth.XdGoogleWebAuth
 import com.bepinex.android.settings.AppSettings
 
 /**
@@ -35,7 +36,8 @@ fun GameSettingsScreen(
     onClearBepInEx: () -> Unit,
     onClearDotnet: () -> Unit,
     onClearLibUnity: () -> Unit,
-    onCopyGameResources: () -> Unit
+    onCopyGameResources: () -> Unit,
+    onGoogleWebLogin: (() -> Unit)? = null
 ) {
     var confirmAction by remember { mutableStateOf<String?>(null) }
 
@@ -115,6 +117,28 @@ fun GameSettingsScreen(
                         Switch(checked = useUnstrippedLibUnity, onCheckedChange = onUseUnstrippedLibUnityChanged)
                     }
                 )
+            }
+
+            if (XdGoogleWebAuth.isHeartopia(packageName) && onGoogleWebLogin != null) {
+                item {
+                    Text(
+                        stringResource(R.string.settings_section_account),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
+                }
+                item {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.settings_google_web_login)) },
+                        supportingContent = { Text(stringResource(R.string.settings_google_web_login_desc)) },
+                        leadingContent = {
+                            Icon(Icons.Outlined.Login, null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        },
+                        modifier = Modifier.clickable { onGoogleWebLogin() }
+                    )
+                }
             }
 
             // Maintenance section

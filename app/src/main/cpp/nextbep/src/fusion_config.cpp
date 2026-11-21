@@ -147,6 +147,14 @@ FusionConfig fusion_parse_config(JNIEnv *env, jobject jFusionConfig)
 {
     FusionConfig config{};
 
+    if (!jFusionConfig)
+    {
+        log(LogLevel::ERROR, TAG, "Runtime config jobject is null!");
+        config.initialized = false;
+        config.useOriginalLibUnity = true;
+        return config;
+    }
+
     jclass configClass = find_class_in_app_classloader(env,
                                                        "com/bepinex/android/tools/FusionConfig");
     if (!configClass)
@@ -158,6 +166,7 @@ FusionConfig fusion_parse_config(JNIEnv *env, jobject jFusionConfig)
     }
     GET_JBOOLEAN_FIELD(isIl2Cpp2Mono);
     GET_JBOOLEAN_FIELD(useOriginalLibUnity);
+    GET_JSTRING_FIELD(gamePackageId);
     GET_JSTRING_FIELD(gameLibraryDirectory);
     GET_JSTRING_FIELD(appLibraryDirectory);
     GET_JSTRING_FIELD(appDataDirectory);

@@ -1,5 +1,7 @@
 #include <jni.h>
 #include <dlfcn.h>
+#include <android/dlext.h>
+#include <cstring>
 #include <string>
 #include <cstdlib>
 #include <android/log.h>
@@ -61,7 +63,15 @@ static bool preload_sibling_library(const char *libraryFileName)
     }
 
     dlerror();
-    void *handle = dlopen(siblingPath.c_str(), RTLD_NOW | RTLD_GLOBAL);
+    // CoreCLR ships OpenSSL as libcrypto.so; Android already has BoringSSL under
+    // the same soname. FORCE_LOAD so we get the APK copy, not conscrypt.
+    android_dlextinfo ext;
+    std::memset(&ext, 0, sizeof(ext));
+    ext.flags = ANDROID_DLEXT_FORCE_LOAD;
+    void *handle = android_dlopen_ext(siblingPath.c_str(), RTLD_NOW | RTLD_GLOBAL, &ext);
+    if (!handle) {
+        handle = dlopen(siblingPath.c_str(), RTLD_NOW | RTLD_GLOBAL);
+    }
     if (!handle) {
         const char *err = dlerror();
         LOGE("preload_sibling_library: dlopen failed for %s at %s: %s",
@@ -338,6 +348,16 @@ load(JNIEnv *env, jobject activityObject, jstring path)
 
         LOGE("load: failed to load IL2CPP library from %s", il2cppPath)
         return JNI_FALSE; // Failed to load IL2CPP library
+    }
+
+    // Enable Mono→game System.Native redirect only after CoreCLR/il2cpp are up.
+    // Doing it inside fusion bootstrap deadlocks the linker (dlopen hook + unwind).
+    using EnableMonoRedirect_t = void (*)();
+    if (void *nb = dlopen("libnextbep.so", RTLD_NOW | RTLD_NOLOAD)) {
+        if (auto enable = reinterpret_cast<EnableMonoRedirect_t>(
+                    dlsym(nb, "bepinex_enable_mono_native_redirect"))) {
+            enable();
+        }
     }
 
     LOGI("load: successfully loaded Unity and IL2CPP libraries")

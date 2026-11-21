@@ -143,6 +143,88 @@ public class Utilities {
         }
     }
 
+    /**
+     * When {@code extractNativeLibs=false}, {@link ApplicationInfo#nativeLibraryDir} is empty.
+     * NextBep needs real on-disk .so files (ELF read + padded copy of libil2cpp).
+     * Extract {@code lib/<abi>/*} from base/split APKs into {@code outputFolder}.
+     */
+    public static boolean ensureExtractedNativeLibs(ApplicationInfo gameInfo, File outputFolder, String abi) {
+        if (gameInfo == null || outputFolder == null) return false;
+        File marker = new File(outputFolder, ".native_libs_extracted");
+        File il2cpp = new File(outputFolder, "libil2cpp.so");
+        if (marker.isFile() && il2cpp.isFile() && il2cpp.length() > 0) {
+            return true;
+        }
+        if (!outputFolder.isDirectory() && !outputFolder.mkdirs()) {
+            Log.e(TAG, "Cannot create native lib extract dir: " + outputFolder);
+            return false;
+        }
+
+        String abiDir = "lib/" + abi + "/";
+        // Some packages use arm64 vs arm64-v8a inconsistently inside the zip.
+        String[] prefixes = new String[] {
+                abiDir,
+                "lib/arm64-v8a/",
+                "lib/arm64/",
+                "lib/armeabi-v7a/"
+        };
+
+        List<String> apks = new ArrayList<>();
+        if (gameInfo.sourceDir != null) apks.add(gameInfo.sourceDir);
+        if (gameInfo.splitSourceDirs != null) Collections.addAll(apks, gameInfo.splitSourceDirs);
+
+        int copied = 0;
+        byte[] buffer = new byte[64 * 1024];
+        for (String apk : apks) {
+            try (ZipFile zip = new ZipFile(apk)) {
+                Enumeration<? extends ZipEntry> entries = zip.entries();
+                while (entries.hasMoreElements()) {
+                    ZipEntry entry = entries.nextElement();
+                    if (entry.isDirectory()) continue;
+                    String name = entry.getName();
+                    String matchedPrefix = null;
+                    for (String prefix : prefixes) {
+                        if (name.startsWith(prefix) && name.endsWith(".so") && name.indexOf('/', prefix.length()) < 0) {
+                            matchedPrefix = prefix;
+                            break;
+                        }
+                    }
+                    if (matchedPrefix == null) continue;
+
+                    File target = new File(outputFolder, name.substring(matchedPrefix.length()));
+                    if (target.isFile() && target.length() == entry.getSize()) {
+                        copied++;
+                        continue;
+                    }
+                    try (InputStream in = zip.getInputStream(entry);
+                         OutputStream out = new FileOutputStream(target)) {
+                        int count;
+                        while ((count = in.read(buffer)) > 0) {
+                            out.write(buffer, 0, count);
+                        }
+                    }
+                    copied++;
+                }
+            } catch (IOException e) {
+                Log.e(TAG, "Failed extracting native libs from " + apk, e);
+            }
+        }
+
+        if (!il2cpp.isFile() || il2cpp.length() == 0) {
+            Log.e(TAG, "libil2cpp.so missing after APK extract into " + outputFolder);
+            return false;
+        }
+        try {
+            if (!marker.createNewFile()) {
+                Log.w(TAG, "native lib marker already present");
+            }
+        } catch (IOException e) {
+            Log.w(TAG, "Failed to create native lib marker", e);
+        }
+        Log.i(TAG, "Extracted " + copied + " native libraries to " + outputFolder);
+        return true;
+    }
+
     public static boolean copyAssets(ApplicationInfo gameInfo, File outputFolder) {
         File marker = new File(outputFolder, ".bepinex_copied");
         if (marker.isFile()) {
@@ -231,4 +313,28 @@ public class Utilities {
             Log.e(TAG, "Failed to extract zip from InputStream!", e);
         }
     }
+
+    /**
+     * Product path (variant A): BepInEx owns
+     * {@code BepInEx_Android/<pkg>/PersistentData} via {@code getExternalFilesDir}.
+     * Empty on first launch is expected — the game HotFix downloads AssetBundles
+     * there. Never read {@code Android/data/<other-pkg>/} from this process
+     * (blocked on Android 11+ regardless of MANAGE_EXTERNAL_STORAGE).
+     *
+     * @return true if the directory exists (or was created)
+     */
+    public static boolean ensurePersistentDataDir(String targetPackage, File dest) {
+        if (dest.isDirectory()) {
+            Log.i(TAG, "PersistentData ready: " + dest.getAbsolutePath());
+            return true;
+        }
+        if (dest.mkdirs()) {
+            Log.i(TAG, "PersistentData created (first run; game will download resources): "
+                    + dest.getAbsolutePath());
+            return true;
+        }
+        Log.e(TAG, "Cannot create PersistentData: " + dest.getAbsolutePath());
+        return false;
+    }
+
 }

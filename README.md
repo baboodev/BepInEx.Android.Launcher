@@ -49,6 +49,11 @@ HayashiUme
 - [Translate](TRANSLATING.md) — Help translate the launcher into your language
 - [Troubleshooting](https://nextbep.github.io/guide/troubleshooting) — Common issues and fixes
 
+### Local design notes (this fork)
+
+- [Google web OAuth (Heartopia)](docs/google-web-oauth.md) — GMS bypass via login-xdsdk + loopback + `signInSuccess`
+- [Game data storage](docs/game-data-storage.md) — launcher vs game data directories
+
 ## Build
 
 There is a CI build in the GitHub Actions page.

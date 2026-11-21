@@ -220,6 +220,9 @@ class BootstrapActivity : Activity() {
             try {
                 GameRuntime.initializeApplication(gameContext, applicationContext)
 
+                // Unity reads Intent extra "unity" for player command-line args.
+                // Do not pass -force-vulkan: this build still boots GLES, and the
+                // flag made platform-display selection worse on Samsung API 37.
                 val gameIntent = Intent(this, launcherClass)
                 val wrapped = Intent(this, StubActivity::class.java).apply {
                     putExtra(InstrumentationHooks.EXTRA_IS_DYNAMIC_ACTIVITY, true)
@@ -248,8 +251,8 @@ class BootstrapActivity : Activity() {
     ): FusionConfig {
         var useOriginalLibUnity = useOriginalLibUnityIn
 
-        val gameLibDir = gameContext.applicationInfo.nativeLibraryDir
         val appLibDir = appContext.applicationInfo.nativeLibraryDir
+        var gameLibDir = gameContext.applicationInfo.nativeLibraryDir ?: ""
         val targetGameAbi = resolveTargetGameAbi(gameLibDir)
             ?: (Build.SUPPORTED_ABIS.firstOrNull() ?: "arm64-v8a")
 
@@ -259,16 +262,35 @@ class BootstrapActivity : Activity() {
         val bepInExDir = File(dataOnSdCard, "BepInEx")
         val codeCacheScoped = File(getDir(RUNTIME_DIR_NAME, Context.MODE_PRIVATE), targetPackage)
 
+        appDataDir.mkdirs()
+        persistentDataDir.mkdirs()
+        codeCacheScoped.mkdirs()
+
+        // Variant A: empty PersistentData is fine — game HotFix downloads into it.
+        updateProgress(getString(R.string.bootstrap_status_preparing), "Preparing game storage…", 3)
+        if (!Utilities.ensurePersistentDataDir(targetPackage, persistentDataDir)) {
+            throw IllegalStateException("Cannot create PersistentData: ${persistentDataDir.absolutePath}")
+        }
+        BepInExLog.i("PersistentData: ${persistentDataDir.absolutePath}")
+
+        // extractNativeLibs=false → empty nativeLibraryDir; pull .so from split APKs
+        val extractedLibs = File(codeCacheScoped, "game-libs")
+        val nativeIl2Cpp = File(gameLibDir, "libil2cpp.so")
+        if (!nativeIl2Cpp.isFile) {
+            updateProgress(getString(R.string.bootstrap_status_preparing), "Extracting native libraries…", 5)
+            if (!Utilities.ensureExtractedNativeLibs(gameContext.applicationInfo, extractedLibs, targetGameAbi)) {
+                throw IllegalStateException("Game native libraries unavailable (extractNativeLibs=false and APK extract failed)")
+            }
+            gameLibDir = extractedLibs.absolutePath
+            BepInExLog.i("Using extracted game libs at $gameLibDir")
+        }
+
         BepInExLog.i("Paths:")
         BepInExLog.i("  gameLibDir:  $gameLibDir")
         BepInExLog.i("  appLibDir:   $appLibDir")
         BepInExLog.i("  appDataDir:  ${appDataDir.absolutePath}")
         BepInExLog.i("  codeCache:   ${codeCacheScoped.absolutePath}")
         BepInExLog.i("  bepInExDir:  ${bepInExDir.absolutePath}")
-
-        appDataDir.mkdirs()
-        persistentDataDir.mkdirs()
-        codeCacheScoped.mkdirs()
 
         // Copy the game's APK assets (bin/Data etc.) to external storage
         updateProgress(getString(R.string.bootstrap_status_copy_assets), "Copying Unity data…", 10)
@@ -332,6 +354,12 @@ class BootstrapActivity : Activity() {
         // Extract the BepInEx runtime (config/ is preserved across launches)
         updateProgress(getString(R.string.bootstrap_status_extracting_runtime), "", 50)
         Utilities.extractZipFromAssets(appContext, "BepInEx.Android.zip", bepInExDir, "config/")
+
+        // Bugtopia overlay: stock Il2CppInterop.InjectorHelpers only recognises GameAssembly.*
+        // module names; Heartopia Android maps libil2cpp.so. A Cecil-patched Runtime DLL under
+        // /sdcard/Bugtopia/patches/ is copied over the extracted core copy every launch so the
+        // APK zip can stay stock until the fork ships the fix.
+        applyBugtopiaIl2CppInteropOverlay(bepInExDir)
 
         // Extract the .NET runtime (skipped while the version/size stamp matches)
         FileExtractor(this).extractDotnetIfNeeded { detail ->
@@ -418,6 +446,28 @@ class BootstrapActivity : Activity() {
         if (!ready) {
             BepInExLog.w("Unity base libraries unavailable — disabling managed auto-download in BepInEx.cfg")
             patchBepInExConfigDisableDownload(bepInExDir)
+        }
+    }
+
+    /**
+     * Copies `/sdcard/Bugtopia/patches/Il2CppInterop.Runtime.dll` over the just-extracted
+     * BepInEx core copy when present. See extract site above for why.
+     */
+    private fun applyBugtopiaIl2CppInteropOverlay(bepInExDir: File) {
+        val overlay = File(
+            android.os.Environment.getExternalStorageDirectory(),
+            "Bugtopia/patches/Il2CppInterop.Runtime.dll"
+        )
+        if (!overlay.isFile) {
+            return
+        }
+
+        val dest = File(bepInExDir, "core/Il2CppInterop.Runtime.dll")
+        try {
+            overlay.copyTo(dest, overwrite = true)
+            BepInExLog.i("Applied Bugtopia Il2CppInterop overlay (${overlay.length()} bytes)")
+        } catch (e: Exception) {
+            BepInExLog.e("Failed to apply Bugtopia Il2CppInterop overlay", e)
         }
     }
 

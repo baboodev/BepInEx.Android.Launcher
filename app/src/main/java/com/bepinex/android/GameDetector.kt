@@ -88,13 +88,16 @@ object GameDetector {
             val apkPath = appInfo.sourceDir ?: continue
             if (!File(apkPath).exists()) continue
 
-            // Check for libil2cpp.so in the APK
-            val hasIl2Cpp = checkForIl2Cpp(apkPath)
-            if (!hasIl2Cpp) {
-                // Also try the native library directory
-                val libCheck = File(appInfo.nativeLibraryDir, "libil2cpp.so")
-                if (!libCheck.exists()) continue
+            // libil2cpp may live in base.apk, an ABI split (config.arm64_v8a), or
+            // nativeLibraryDir when extractNativeLibs=true. Heartopia ships it only
+            // in split_config.arm64_v8a.apk with extractNativeLibs=false.
+            val apkCandidates = buildList {
+                add(apkPath)
+                appInfo.splitSourceDirs?.forEach { add(it) }
             }
+            val hasIl2Cpp = apkCandidates.any { checkForIl2Cpp(it) } ||
+                File(appInfo.nativeLibraryDir, "libil2cpp.so").exists()
+            if (!hasIl2Cpp) continue
 
             // Found a Unity IL2CPP game!
             val label = pm.getApplicationLabel(appInfo).toString()
