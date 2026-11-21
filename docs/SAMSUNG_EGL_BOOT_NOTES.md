@@ -27,8 +27,9 @@ Wired in `mono_sysnative.cpp`.
 | Do | Do not |
 |---|---|
 | Remap + `FORCE_LOAD` `libXdtSysNative.so` | `DobbyHook` libc `dlopen` — THEMIS SIGTRAP |
-| After monosgen maps + root domain: `mono_install_assembly_load_hook` | `mono_dllmap_insert` / assembly hook before domain — SIGABRT |
-| Promote every `Interop/Sys` P/Invoke → `mono_dangerous_add_raw_internal_call` + remapped `SystemNative_*` | Waiter `mono_thread_attach` / `mono_assembly_foreach` — SEGV |
-| | Dobby `mono_jit_init*` — soft-lock; exported `mono_compile_method` — not on JIT trampoline path |
+| Early plain `dlopen` monosgen + `libmono-component-marshal-ilgen.so` | `FORCE_LOAD` monosgen (second mapping; fallback/icalls bind wrong copy) |
+| After root domain: assembly hook → DNS / SocketAddress / `GetReadDirRBufferSize` icalls | `mono_dllmap_insert` / early CoreLib promote — SIGABRT / `hash != NULL` |
+| Dobby `lookup_pinvoke_call_impl` (RVA) → remapped `SystemNative_ReadDirR` | Promoting `ReadDirR` to icall — abort during integrity |
+| | Waiter `mono_thread_attach` / `mono_assembly_foreach` — SEGV; Dobby `mono_jit_init*` — soft-lock |
 
-Verified: `icall GetHostEntryForName rc=0`, `#HOTFIX_CHECKBUNDLEEND`, no `InvalidProgramException` / DnsClient UDP/53 fallback.
+Verified: `icall GetHostEntryForName rc=0`, `#HOTFIX_CHECKBUNDLEEND`, clean `#HOTFIX_END` (no `Integrity check failed: SystemNative_ReadDirR`), MonoGameState + login.

@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <vector>
 
+#include <external/dobby.h>
 #include <logger.h>
 #include <utilities/soname.h>
 
@@ -255,9 +256,8 @@ static const void *resolve_sysnative_for_method(const char *methodName, bool *ou
         }
         return reinterpret_cast<const void *>(icall_GetSocketAddressSizes);
     }
-    // CoreLib Interop.Sys — HotFix CleanUnusedFiles needs the buffer-size export
-    // that CoreCLR's System.Native lacks. Do NOT promote ReadDirR here: its
-    // DirectoryEntry& signature aborts under add_internal_call on this runtime.
+    // CoreLib GetReadDirRBufferSize — also covered by mono_dl_symbol hook when
+    // Mono binds CoreCLR's System.Native; keep as belt-and-suspenders.
     if (std::strcmp(logical, "GetReadDirRBufferSize") == 0) {
         if (outRaw) {
             *outRaw = true; // parameterless int
@@ -618,11 +618,101 @@ static void *sysnative_fallback_symbol(void *handle, const char *name, char **er
     return sym;
 }
 
+// Public mono_lookup_pinvoke_call is unused by the HotFix path (internal only).
+// Disassembled: both public + internal BL lookup_pinvoke_call_impl @ RVA 0x2973e8
+// on this libmonosgen-2.0.so. Hook that to satisfy ReadDirR from remapped game lib.
+static constexpr uintptr_t kLookupPinvokeCallImplRva = 0x2973e8;
+using lookup_pinvoke_impl_fn = void *(*)(void *method, void *status);
+static lookup_pinvoke_impl_fn g_origLookupPinvokeImpl = nullptr;
+static std::atomic<int> g_pinvokeRemapHits{0};
+
+static const char *sysnative_export_for_method(const char *methodName)
+{
+    char logical[128];
+    if (!extract_pinvoke_logical_name(methodName, logical, sizeof(logical))) {
+        return nullptr;
+    }
+    if (std::strcmp(logical, "ReadDirR") == 0) {
+        return "SystemNative_ReadDirR";
+    }
+    if (std::strcmp(logical, "GetReadDirRBufferSize") == 0) {
+        return "SystemNative_GetReadDirRBufferSize";
+    }
+    if (std::strcmp(logical, "OpenDir") == 0) {
+        return "SystemNative_OpenDir";
+    }
+    if (std::strcmp(logical, "CloseDir") == 0) {
+        return "SystemNative_CloseDir";
+    }
+    return nullptr;
+}
+
+static void *hooked_lookup_pinvoke_call_impl(void *method, void *status)
+{
+    void *addr =
+            g_origLookupPinvokeImpl ? g_origLookupPinvokeImpl(method, status) : nullptr;
+    if (addr || !method || !g_remappedHandle || !g_monoHandle) {
+        return addr;
+    }
+    auto getName =
+            reinterpret_cast<mono_method_get_name_fn>(dlsym(g_monoHandle, "mono_method_get_name"));
+    const char *mn = getName ? getName(method) : nullptr;
+    const char *exportName = mn ? sysnative_export_for_method(mn) : nullptr;
+    if (!exportName) {
+        return nullptr;
+    }
+    void *gameSym = dlsym(g_remappedHandle, exportName);
+    if (!gameSym) {
+        return nullptr;
+    }
+    int n = g_pinvokeRemapHits.fetch_add(1) + 1;
+    if (n <= 8 || (n % 64) == 0) {
+        log_format(LogLevel::INFO, TAG, "pinvoke_impl {} → {} (#{})", mn, exportName, n);
+    }
+    // Clear MonoLookupPInvokeStatus { err_code, err_arg } so callers treat as OK.
+    if (status) {
+        std::memset(status, 0, 16);
+    }
+    return gameSym;
+}
+
+static void *monosgen_base_from_handle(void *mono)
+{
+    Dl_info info;
+    std::memset(&info, 0, sizeof(info));
+    void *probe = dlsym(mono, "mono_lookup_pinvoke_call");
+    if (!probe || !dladdr(probe, &info) || !info.dli_fbase) {
+        return nullptr;
+    }
+    return info.dli_fbase;
+}
+
+static void install_lookup_pinvoke_impl_hook()
+{
+    if (!g_monoHandle || g_origLookupPinvokeImpl) {
+        return;
+    }
+    void *base = monosgen_base_from_handle(g_monoHandle);
+    if (!base) {
+        log(LogLevel::WARN, TAG, "monosgen base unknown; cannot hook pinvoke_impl");
+        return;
+    }
+    void *sym = reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(base) +
+                                         kLookupPinvokeCallImplRva);
+    dobby_disable_near_branch_trampoline();
+    int rc = DobbyHook(sym, reinterpret_cast<dobby_dummy_func_t>(hooked_lookup_pinvoke_call_impl),
+                       reinterpret_cast<dobby_dummy_func_t *>(&g_origLookupPinvokeImpl));
+    log_format(rc == 0 ? LogLevel::INFO : LogLevel::ERROR, TAG,
+               "Dobby lookup_pinvoke_call_impl @+{:x}: {}", kLookupPinvokeCallImplRva,
+               rc == 0 ? "ok" : "fail");
+}
+
 static void register_sysnative_dl_fallback()
 {
     if (!g_monoHandle || !g_remappedHandle) {
         return;
     }
+    install_lookup_pinvoke_impl_hook();
     auto reg = reinterpret_cast<mono_dl_fallback_register_fn>(
             dlsym(g_monoHandle, "mono_dl_fallback_register"));
     if (!reg) {
