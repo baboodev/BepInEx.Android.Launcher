@@ -5,8 +5,10 @@
 #include <cstdio>
 #include <cstring>
 #include <dlfcn.h>
+#include <mutex>
 #include <pthread.h>
 #include <string>
+#include <unordered_map>
 #include <unistd.h>
 #include <vector>
 
@@ -29,9 +31,20 @@ namespace fs = std::filesystem;
 static std::string g_redirectSystemNative;
 static void *g_remappedHandle = nullptr;
 static void *g_monoHandle = nullptr;
+static fs::path g_gameLibsPath;
+static std::mutex g_gameNativeMu;
+static std::unordered_map<std::string, void *> g_gameNativeByKey;
 static std::atomic<bool> g_waiterStarted{false};
 static std::atomic<bool> g_icallInstalled{false};
 static std::atomic<bool> g_hookArmed{false};
+
+// Bare DllImport sonames Mono needs after ConnectToRoom--2 (nativeLibraryDir empty).
+static const char *kGameNativePreload[] = {
+        "libzstd.so",
+        "libXDAsyncIO.so",
+        "libkcpsb.so",
+        "libAkSoundEngine.so",
+};
 
 using ghe_fn = int32_t (*)(const uint8_t *, int32_t, void *);
 using free_fn = void (*)(void *);
@@ -580,19 +593,126 @@ static bool name_is_system_native(const char *name)
            std::strcmp(name, "libSystem.Native.so") == 0;
 }
 
+static bool name_is_reserved_soname(const char *name)
+{
+    // Never steal CoreCLR / OpenSSL / remapped System.Native via game-native cache.
+    if (!name) {
+        return true;
+    }
+    return name_is_system_native(name) ||
+           std::strstr(name, "System.Native") != nullptr ||
+           std::strstr(name, "crypto") != nullptr ||
+           std::strstr(name, "ssl") != nullptr ||
+           std::strstr(name, "coreclr") != nullptr ||
+           std::strstr(name, "monosgen") != nullptr;
+}
+
+static std::string normalize_soname_key(const char *name)
+{
+    if (!name || !*name) {
+        return {};
+    }
+    std::string s = name;
+    if (s.rfind("lib", 0) != 0) {
+        s = "lib" + s;
+    }
+    if (s.size() < 3 || s.compare(s.size() - 3, 3, ".so") != 0) {
+        s += ".so";
+    }
+    return s;
+}
+
+static void *cache_game_native_file(const fs::path &file)
+{
+    if (!fs::exists(file)) {
+        return nullptr;
+    }
+    std::string key = file.filename().string();
+    {
+        std::lock_guard<std::mutex> lock(g_gameNativeMu);
+        auto it = g_gameNativeByKey.find(key);
+        if (it != g_gameNativeByKey.end()) {
+            return it->second;
+        }
+    }
+    dlerror();
+    // Plain dlopen — FORCE_LOAD of a second copy broke AsyncIO (init A, P/Invoke B).
+    void *h = dlopen(file.c_str(), RTLD_NOW | RTLD_GLOBAL);
+    const char *err = h ? nullptr : dlerror();
+    log_format(h ? LogLevel::INFO : LogLevel::WARN, TAG, "Preload game-native {}: {}",
+               file.string(), h ? "ok" : (err ? err : "fail"));
+    if (!h) {
+        return nullptr;
+    }
+    std::lock_guard<std::mutex> lock(g_gameNativeMu);
+    g_gameNativeByKey.emplace(key, h);
+    return h;
+}
+
+static void preload_game_natives(const fs::path &gameLibsPath)
+{
+    g_gameLibsPath = gameLibsPath;
+    for (const char *lib : kGameNativePreload) {
+        void *h = cache_game_native_file(gameLibsPath / lib);
+        if (!h) {
+            continue;
+        }
+        if (std::strcmp(lib, "libzstd.so") == 0) {
+            auto ver = reinterpret_cast<unsigned (*)()>(dlsym(h, "ZSTD_versionNumber"));
+            log_format(ver ? LogLevel::INFO : LogLevel::WARN, TAG, "libzstd ZSTD_versionNumber: {}",
+                       ver ? "ok" : "MISSING");
+        } else if (std::strcmp(lib, "libXDAsyncIO.so") == 0) {
+            void *init = dlsym(h, "asyncio_asyncio_init");
+            log_format(init ? LogLevel::INFO : LogLevel::WARN, TAG,
+                       "libXDAsyncIO asyncio_asyncio_init: {}", init ? "ok" : "MISSING");
+        }
+    }
+}
+
+static void *lookup_game_native(const char *name)
+{
+    if (!name || name_is_reserved_soname(name) || g_gameLibsPath.empty()) {
+        return nullptr;
+    }
+    std::string key = normalize_soname_key(name);
+    if (key.empty()) {
+        return nullptr;
+    }
+    {
+        std::lock_guard<std::mutex> lock(g_gameNativeMu);
+        auto it = g_gameNativeByKey.find(key);
+        if (it != g_gameNativeByKey.end()) {
+            log_format(LogLevel::INFO, TAG, "dlopen redirect {} → cached game-native", key);
+            return it->second;
+        }
+    }
+    void *h = cache_game_native_file(g_gameLibsPath / key);
+    if (h) {
+        log_format(LogLevel::INFO, TAG, "dlopen redirect {} → cached game-native", key);
+    }
+    return h;
+}
+
 static void *sysnative_fallback_load(const char *name, int /*flags*/, char **err, void * /*user*/)
 {
-    if (!name_is_system_native(name) || !g_remappedHandle) {
-        return nullptr; // not ours — Mono continues with default dlopen
+    if (name_is_system_native(name) && g_remappedHandle) {
+        static std::atomic<bool> logged{false};
+        if (!logged.exchange(true)) {
+            log_format(LogLevel::INFO, TAG, "mono_dl_fallback load {} → libXdtSysNative", name);
+        }
+        if (err) {
+            *err = nullptr;
+        }
+        return g_remappedHandle;
     }
-    static std::atomic<bool> logged{false};
-    if (!logged.exchange(true)) {
-        log_format(LogLevel::INFO, TAG, "mono_dl_fallback load {} → libXdtSysNative", name);
+    void *game = lookup_game_native(name);
+    if (game) {
+        if (err) {
+            *err = nullptr;
+        }
+        return game;
     }
-    if (err) {
-        *err = nullptr;
-    }
-    return g_remappedHandle;
+    return nullptr; // not ours — Mono continues with default dlopen
 }
 
 static void *sysnative_fallback_symbol(void *handle, const char *name, char **err, void * /*user*/)
@@ -600,8 +720,6 @@ static void *sysnative_fallback_symbol(void *handle, const char *name, char **er
     if (!name) {
         return nullptr;
     }
-    // Prefer remapped game exports (GetReadDirRBufferSize / ReadDirR). Fall back
-    // to process default so CoreCLR-only socket symbols still resolve.
     void *sym = nullptr;
     if (handle) {
         sym = dlsym(handle, name);
@@ -613,7 +731,7 @@ static void *sysnative_fallback_symbol(void *handle, const char *name, char **er
         sym = dlsym(RTLD_DEFAULT, name);
     }
     if (err) {
-        *err = sym ? nullptr : nullptr;
+        *err = nullptr;
     }
     return sym;
 }
@@ -764,6 +882,7 @@ static void preload_marshal_ilgen(const fs::path &gameLibsPath)
 void mono_sysnative_prepare(const fs::path &gameLibsPath, const fs::path &codeCache)
 {
     preload_marshal_ilgen(gameLibsPath);
+    preload_game_natives(gameLibsPath);
 
     fs::path src = gameLibsPath / "libSystem.Native.so";
     if (!fs::exists(src)) {
