@@ -221,6 +221,7 @@ public class NativeLibraryManager {
      * Load the game's OpenSSL into the game ClassLoader namespace before Mono
      * starts. Plain soname lookup otherwise binds conscrypt BoringSSL (no
      * BIO_new_mem_buf) and Heartopia Mono SIGSEGVs at OnDllHotFixFinish.
+     * marshal-ilgen is preloaded from native (needs monosgen NEEDED first).
      */
     private static void preloadOpenSslInto(ClassLoader gameLoader, String gameLibsDir) {
         String[] libs = { "libcrypto.so", "libssl.so" };

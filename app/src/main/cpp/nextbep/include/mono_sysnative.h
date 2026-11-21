@@ -6,5 +6,5 @@
 void mono_sysnative_prepare(const std::filesystem::path &gameLibsPath,
                             const std::filesystem::path &codeCache);
 
-// Install dlopen hooks (Mono callers only). Call AFTER Unity+il2cpp load.
+// No-op if prepare already armed the assembly-load hook; kept for main.cpp.
 extern "C" void bepinex_enable_mono_native_redirect(void);

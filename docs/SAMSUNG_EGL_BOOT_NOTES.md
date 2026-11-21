@@ -22,12 +22,13 @@ Verified vanilla (no Bugtopia): Product Name, Chainloader complete, login bridge
 
 ## System.Native / HotFix DNS (follow-up)
 
-Wired in `mono_sysnative.cpp` (unique SONAME `libXdtSysNative.so` + `mono_dl_fallback_register`).
+Wired in `mono_sysnative.cpp`.
 
 | Do | Do not |
 |---|---|
-| Remap + `FORCE_LOAD` remapped copy | `DobbyHook` libc `dlopen` — THEMIS SIGTRAP via coreclr |
-| `mono_dl_fallback_register` after monosgen loads | `mono_dllmap_insert` from `jit_init` — SIGABRT on this Mono |
-| `install_themis_f000000a_guard` after themis preload | Early monosgen preload + jit_init Dobby |
+| Remap + `FORCE_LOAD` `libXdtSysNative.so` | `DobbyHook` libc `dlopen` — THEMIS SIGTRAP |
+| After monosgen maps + root domain: `mono_install_assembly_load_hook` | `mono_dllmap_insert` / assembly hook before domain — SIGABRT |
+| Promote every `Interop/Sys` P/Invoke → `mono_dangerous_add_raw_internal_call` + remapped `SystemNative_*` | Waiter `mono_thread_attach` / `mono_assembly_foreach` — SEGV |
+| | Dobby `mono_jit_init*` — soft-lock; exported `mono_compile_method` — not on JIT trampoline path |
 
-HotFix still logs `GetHostEntryForName` InvalidProgramException and falls back to the oversea pool; version HTTP fetch succeeds. Full bare-soname redirect needs a themis-safe path (not libc Dobby).
+Verified: `icall GetHostEntryForName rc=0`, `#HOTFIX_CHECKBUNDLEEND`, no `InvalidProgramException` / DnsClient UDP/53 fallback.
