@@ -196,6 +196,8 @@
     <string name="settings_dynamic_color_desc">Color scheme based on the system accent color (Android 12+ only).</string>
     <string name="settings_animation_disabled">Disable Animations</string>
     <string name="settings_animation_disabled_desc">Disabling animations can improve performance on some devices.</string>
+    <string name="settings_floating_log">In-game log button</string>
+    <string name="settings_floating_log_desc">Show a BepInEx log FAB in the bottom-left corner while the game runs. Off by default.</string>
     <string name="animation_restart_title">Restart Required</string>
     <string name="animation_restart_message">Animations will be disabled after restarting the app. Restart now?</string>
     <string name="animation_restart_now">Restart</string>

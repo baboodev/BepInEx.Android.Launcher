@@ -193,6 +193,8 @@
     <string name="settings_dynamic_color_desc">基於系統主題色的配色（僅適用於 Android 12 以上裝置）。</string>
     <string name="settings_animation_disabled">關閉動畫</string>
     <string name="settings_animation_disabled_desc">關閉動畫可提升部分效能。</string>
+    <string name="settings_floating_log">遊戲內日誌按鈕</string>
+    <string name="settings_floating_log_desc">在遊戲左下角顯示 BepInEx 日誌懸浮按鈕。預設關閉。</string>
     <string name="animation_restart_title">需要重新啟動</string>
     <string name="animation_restart_message">重新啟動後才會關閉動畫，是否立即重新啟動？</string>
     <string name="animation_restart_now">重新啟動</string>

@@ -128,10 +128,11 @@ object AppSettings {
         prefs(context).edit().putBoolean(KEY_PENDING_INCOMPLETE_DIALOG, pending).commit()
     }
 
-    // Floating Log in Game (always enabled; no user setting)
+    // Floating BepInEx log FAB (bottom-left). Off by default — opt-in diagnostic UI only.
+    // Pure Android DecorView overlay; does not install GameAssembly `.text` patches.
 
     fun isFloatingModMenuEnabled(context: Context): Boolean =
-        prefs(context).getBoolean(KEY_FLOATING_MOD_MENU, true) // default ON
+        prefs(context).getBoolean(KEY_FLOATING_MOD_MENU, false)
 
     fun setFloatingModMenuEnabled(context: Context, enabled: Boolean) {
         prefs(context).edit().putBoolean(KEY_FLOATING_MOD_MENU, enabled).apply()

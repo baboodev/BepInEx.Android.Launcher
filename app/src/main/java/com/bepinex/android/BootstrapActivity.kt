@@ -273,16 +273,59 @@ class BootstrapActivity : Activity() {
         }
         BepInExLog.i("PersistentData: ${persistentDataDir.absolutePath}")
 
-        // extractNativeLibs=false → empty nativeLibraryDir; pull .so from split APKs
+        // Detect APK / metadata changes so extracted natives, copied assets and interop
+        // regenerate instead of keeping the one-shot markers from the first install.
+        val gameRoot = dataOnSdCard
+        val contentStamp = GameContentStamp.compute(appContext, targetPackage)
+        val previousStamp = GameContentStamp.readStored(gameRoot)
+        val interopHash = File(bepInExDir, "interop/assembly-hash.txt")
+        val contentChanged = previousStamp != null && previousStamp != contentStamp
+        val firstStamp = previousStamp == null
+        if (contentChanged) {
+            BepInExLog.i(
+                "Game content stamp changed — refreshing natives/assets/interop" +
+                    " (was=$previousStamp)"
+            )
+            GameContentStamp.invalidateInterop(bepInExDir)
+            // Fusion's padded libil2cpp copy is derived from game-libs; drop it so the
+            // next bootstrap re-pads from the refreshed extract.
+            File(codeCacheScoped, "libil2cpp.so").delete()
+        } else if (firstStamp) {
+            // First launch with this feature: adopt the stamp. Wipe interop only when it is
+            // missing so BepInEx still generates on a cold tree; keep a working set intact.
+            BepInExLog.i("Recording initial game content stamp")
+            if (!interopHash.isFile) {
+                BepInExLog.i("No interop hash yet — BepInEx will generate assemblies this launch")
+            }
+        } else {
+            BepInExLog.i("Game content stamp unchanged")
+            if (!interopHash.isFile) {
+                BepInExLog.i("Interop hash missing — BepInEx will generate assemblies this launch")
+            }
+        }
+
+        // extractNativeLibs=false → empty nativeLibraryDir; pull .so from split APKs.
+        // Also re-extract when the game stamp moved so a stale libil2cpp.so cannot pin
+        // Il2CppInterop's assembly-hash forever.
         val extractedLibs = File(codeCacheScoped, "game-libs")
-        val nativeIl2Cpp = File(gameLibDir, "libil2cpp.so")
-        if (!nativeIl2Cpp.isFile) {
+        val systemIl2Cpp = File(gameLibDir, "libil2cpp.so")
+        if (!systemIl2Cpp.isFile) {
             updateProgress(getString(R.string.bootstrap_status_preparing), "Extracting native libraries…", 5)
-            if (!Utilities.ensureExtractedNativeLibs(gameContext.applicationInfo, extractedLibs, targetGameAbi)) {
-                throw IllegalStateException("Game native libraries unavailable (extractNativeLibs=false and APK extract failed)")
+            if (!Utilities.ensureExtractedNativeLibs(
+                    gameContext.applicationInfo, extractedLibs, targetGameAbi, contentStamp
+                )
+            ) {
+                throw IllegalStateException(
+                    "Game native libraries unavailable (extractNativeLibs=false and APK extract failed)"
+                )
             }
             gameLibDir = extractedLibs.absolutePath
             BepInExLog.i("Using extracted game libs at $gameLibDir")
+        } else if (contentChanged) {
+            updateProgress(getString(R.string.bootstrap_status_preparing), "Refreshing native libraries…", 5)
+            Utilities.ensureExtractedNativeLibs(
+                gameContext.applicationInfo, extractedLibs, targetGameAbi, contentStamp
+            )
         }
 
         BepInExLog.i("Paths:")
@@ -295,7 +338,7 @@ class BootstrapActivity : Activity() {
         // Copy the game's APK assets (bin/Data etc.) to external storage
         updateProgress(getString(R.string.bootstrap_status_copy_assets), "Copying Unity data…", 10)
         val assetsDir = File(dataOnSdCard, "Assets")
-        if (!Utilities.copyAssets(gameContext.applicationInfo, assetsDir)) {
+        if (!Utilities.copyAssets(gameContext.applicationInfo, assetsDir, contentStamp)) {
             BepInExLog.e("Failed to copy Unity Data assets! BepInEx may not work correctly.")
         }
         val copiedData = File(assetsDir, "bin/Data")
@@ -389,6 +432,15 @@ class BootstrapActivity : Activity() {
         updateProgress(getString(R.string.bootstrap_status_preparing), "Checking il2cpp api map…", 75)
         val deobfuscationDir = File(bepInExDir, "Deobfuscation")
         val il2cppMap = resolveIl2CppApiMap(gameLibDir, codeCacheScoped, useOriginalLibUnity, deobfuscationDir)
+
+        // Keep managed auto-regen on: without it a wiped interop folder stays empty forever.
+        ensureInteropUpdateEnabled(bepInExDir)
+
+        try {
+            GameContentStamp.writeStored(gameRoot, contentStamp)
+        } catch (e: Exception) {
+            BepInExLog.w("Failed to persist game content stamp: ${e.message}")
+        }
 
         return FusionConfig(
             targetPackage,
@@ -709,6 +761,61 @@ class BootstrapActivity : Activity() {
         } catch (e: Exception) {
             BepInExLog.w("Failed to patch BepInEx.cfg: ${e.message}")
         }
+    }
+
+    /**
+     * Pins `[IL2CPP] UpdateInteropAssemblies = true` so wiping `assembly-hash.txt` actually
+     * triggers a regenerate. BepInEx reads the file at Preloader start; writing here is early
+     * enough for this same launch.
+     */
+    private fun ensureInteropUpdateEnabled(bepInExDir: File) {
+        val configFile = File(bepInExDir, "config/BepInEx.cfg")
+        try {
+            val lines = if (configFile.isFile) {
+                configFile.readLines().toMutableList()
+            } else {
+                mutableListOf()
+            }
+            if (setIniValue(lines, "IL2CPP", "UpdateInteropAssemblies", "true")) {
+                configFile.parentFile?.mkdirs()
+                configFile.writeText(lines.joinToString("\n") + "\n")
+                BepInExLog.i("BepInEx.cfg [IL2CPP] UpdateInteropAssemblies = true")
+            }
+        } catch (e: Exception) {
+            BepInExLog.w("Failed to pin UpdateInteropAssemblies: ${e.message}")
+        }
+    }
+
+    /** Sets one key inside one section. True when the file content would change. */
+    private fun setIniValue(lines: MutableList<String>, section: String, key: String, value: String): Boolean {
+        val header = "[$section]"
+        var sectionStart = -1
+        for (i in lines.indices) {
+            if (lines[i].trim().equals(header, ignoreCase = true)) {
+                sectionStart = i
+                break
+            }
+        }
+        if (sectionStart < 0) {
+            if (lines.isNotEmpty() && lines.last().trim().isNotEmpty()) lines.add("")
+            lines.add(header)
+            lines.add("$key = $value")
+            return true
+        }
+        for (i in (sectionStart + 1) until lines.size) {
+            val line = lines[i]
+            if (line.trimStart().startsWith("[")) break
+            if (line.trimStart().startsWith("#")) continue
+            val eq = line.indexOf('=')
+            if (eq < 0) continue
+            if (!line.substring(0, eq).trim().equals(key, ignoreCase = true)) continue
+            val current = line.substring(eq + 1).trim()
+            if (current.equals(value, ignoreCase = true)) return false
+            lines[i] = "$key = $value"
+            return true
+        }
+        lines.add(sectionStart + 1, "$key = $value")
+        return true
     }
 
     // ------------------------------------------------------------------ helpers

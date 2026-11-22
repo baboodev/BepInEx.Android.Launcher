@@ -12,6 +12,7 @@ import androidx.annotation.Nullable;
 
 import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -148,12 +149,30 @@ public class Utilities {
      * NextBep needs real on-disk .so files (ELF read + padded copy of libil2cpp).
      * Extract {@code lib/<abi>/*} from base/split APKs into {@code outputFolder}.
      */
+    /**
+     * @param contentStamp when non-null/non-empty, written into the marker; a different stamp on a
+     *                     later call forces a re-extract even if {@code libil2cpp.so} is present.
+     */
     public static boolean ensureExtractedNativeLibs(ApplicationInfo gameInfo, File outputFolder, String abi) {
+        return ensureExtractedNativeLibs(gameInfo, outputFolder, abi, null);
+    }
+
+    public static boolean ensureExtractedNativeLibs(ApplicationInfo gameInfo, File outputFolder, String abi,
+                                                    String contentStamp) {
         if (gameInfo == null || outputFolder == null) return false;
         File marker = new File(outputFolder, ".native_libs_extracted");
         File il2cpp = new File(outputFolder, "libil2cpp.so");
-        if (marker.isFile() && il2cpp.isFile() && il2cpp.length() > 0) {
+        String expected = contentStamp == null ? "" : contentStamp.trim();
+        boolean force = !expected.isEmpty()
+                && marker.isFile()
+                && !expected.equals(readStamp(marker));
+        if (marker.isFile() && il2cpp.isFile() && il2cpp.length() > 0 && !force) {
             return true;
+        }
+        if (force) {
+            Log.i(TAG, "Native lib stamp changed — re-extracting into " + outputFolder);
+            //noinspection ResultOfMethodCallIgnored
+            marker.delete();
         }
         if (!outputFolder.isDirectory() && !outputFolder.mkdirs()) {
             Log.e(TAG, "Cannot create native lib extract dir: " + outputFolder);
@@ -192,9 +211,15 @@ public class Utilities {
                     if (matchedPrefix == null) continue;
 
                     File target = new File(outputFolder, name.substring(matchedPrefix.length()));
-                    if (target.isFile() && target.length() == entry.getSize()) {
+                    // On a stamp refresh overwrite even when the size matches — CRC can change
+                    // without a size change, and a prior failed extract can leave a truncated .so.
+                    if (!force && target.isFile() && target.length() == entry.getSize()) {
                         copied++;
                         continue;
+                    }
+                    File parent = target.getParentFile();
+                    if (parent != null && !parent.isDirectory() && !parent.mkdirs()) {
+                        throw new IOException("Failed to create " + parent);
                     }
                     try (InputStream in = zip.getInputStream(entry);
                          OutputStream out = new FileOutputStream(target)) {
@@ -214,21 +239,32 @@ public class Utilities {
             Log.e(TAG, "libil2cpp.so missing after APK extract into " + outputFolder);
             return false;
         }
-        try {
-            if (!marker.createNewFile()) {
-                Log.w(TAG, "native lib marker already present");
-            }
-        } catch (IOException e) {
-            Log.w(TAG, "Failed to create native lib marker", e);
-        }
+        writeStamp(marker, expected);
         Log.i(TAG, "Extracted " + copied + " native libraries to " + outputFolder);
         return true;
     }
 
     public static boolean copyAssets(ApplicationInfo gameInfo, File outputFolder) {
+        return copyAssets(gameInfo, outputFolder, null);
+    }
+
+    /**
+     * @param contentStamp when non-null/non-empty, written into the marker; a different stamp on a
+     *                     later call forces a re-copy even if {@code .bepinex_copied} exists.
+     */
+    public static boolean copyAssets(ApplicationInfo gameInfo, File outputFolder, String contentStamp) {
         File marker = new File(outputFolder, ".bepinex_copied");
-        if (marker.isFile()) {
+        String expected = contentStamp == null ? "" : contentStamp.trim();
+        boolean force = !expected.isEmpty()
+                && marker.isFile()
+                && !expected.equals(readStamp(marker));
+        if (marker.isFile() && !force) {
             return true;
+        }
+        if (force) {
+            Log.i(TAG, "Unity asset stamp changed — re-copying into " + outputFolder);
+            //noinspection ResultOfMethodCallIgnored
+            marker.delete();
         }
 
         List<String> apks = new ArrayList<>();
@@ -255,7 +291,7 @@ public class Utilities {
 
                     File target = new File(outputFolder, name.substring("assets/".length()));
                     if (!target.getCanonicalPath().startsWith(outputRoot)) continue;
-                    if (target.isFile() && target.length() == entry.getSize()) continue;
+                    if (!force && target.isFile() && target.length() == entry.getSize()) continue;
 
                     File parent = target.getParentFile();
                     if (parent != null && !parent.isDirectory() && !parent.mkdirs()) {
@@ -276,15 +312,37 @@ public class Utilities {
             }
         }
 
-        try {
-            if (!marker.createNewFile()) {
-                Log.w(TAG, "Failed to create asset copy marker: " + marker.getAbsolutePath());
-            }
-        } catch (IOException e) {
-            Log.w(TAG, "Failed to create asset copy marker", e);
-        }
+        writeStamp(marker, expected);
         Log.i(TAG, "Successfully copied " + copied + " Unity Data assets to: " + outputFolder.getAbsolutePath());
         return true;
+    }
+
+    private static String readStamp(File marker) {
+        try {
+            byte[] bytes = new byte[(int) Math.min(marker.length(), 4096L)];
+            try (InputStream in = new FileInputStream(marker)) {
+                int n = in.read(bytes);
+                if (n <= 0) return "";
+                return new String(bytes, 0, n, java.nio.charset.StandardCharsets.UTF_8).trim();
+            }
+        } catch (IOException e) {
+            return "";
+        }
+    }
+
+    private static void writeStamp(File marker, String stamp) {
+        try {
+            File parent = marker.getParentFile();
+            if (parent != null && !parent.isDirectory() && !parent.mkdirs()) {
+                Log.w(TAG, "Failed to create stamp parent: " + parent);
+            }
+            String payload = (stamp == null || stamp.isEmpty()) ? "ok" : stamp;
+            try (OutputStream out = new FileOutputStream(marker, false)) {
+                out.write(payload.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            }
+        } catch (IOException e) {
+            Log.w(TAG, "Failed to write stamp " + marker.getAbsolutePath(), e);
+        }
     }
 
     public static boolean deleteRecursive(File file) {
