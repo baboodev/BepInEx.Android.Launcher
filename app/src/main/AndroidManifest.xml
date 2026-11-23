@@ -128,11 +128,13 @@
             android:taskAffinity="com.bepinex.android.modremote"
             android:configChanges="keyboard|keyboardHidden|screenSize" />
 
-        <!-- Same-uid Messenger router between ModRemoteActivity and :game mod. -->
+        <!-- Messenger router in :game (same process as the mod). Panel binds cross-process;
+             the mod attaches in-process — bindService from :game→default process returned false. -->
         <service
             android:name="com.bepinex.android.remote.ModSettingsService"
             android:exported="false"
-            android:enabled="true">
+            android:enabled="true"
+            android:process=":game">
             <intent-filter>
                 <action android:name="com.bepinex.android.action.MOD_SETTINGS" />
             </intent-filter>

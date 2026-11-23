@@ -250,6 +250,13 @@ public final class GameRuntime {
                 } catch (Throwable t) {
                     Log.e("GameRuntime", "RotatePipRemote attach failed", t);
                 }
+                try {
+                    // Bind from Java with the Activity context (:game application Context
+                    // bindService returned false on device).
+                    com.bepinex.android.remote.ModSettingsModBridge.bind(activity);
+                } catch (Throwable t) {
+                    Log.e("GameRuntime", "ModSettingsModBridge.bind failed", t);
+                }
             }
         }
         @Override public void callActivityOnPause(Activity activity) {

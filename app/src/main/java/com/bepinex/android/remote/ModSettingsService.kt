@@ -13,6 +13,21 @@ import android.util.Log
 class ModSettingsService : Service() {
     companion object {
         private const val TAG = "BugtopiaModSettings"
+
+        @Volatile
+        private var instance: ModSettingsService? = null
+
+        /** In-process mod attach (same :game process) — avoids bindService from the mod. */
+        @JvmStatic
+        fun attachModReply(reply: Messenger?) {
+            val svc = instance
+            if (svc == null || reply == null) {
+                Log.w(TAG, "attachModReply skipped instance=${svc != null}")
+                return
+            }
+            svc.modPeer = reply
+            Log.i(TAG, "HELLO mod connected (in-process attach)")
+        }
     }
 
     private lateinit var thread: HandlerThread
@@ -22,13 +37,22 @@ class ModSettingsService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        instance = this
         thread = HandlerThread("ModSettingsSvc").also { it.start() }
         messenger = Messenger(Handler(thread.looper, ::handle))
+        Log.i(TAG, "ModSettingsService onCreate process=:game")
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        return START_STICKY
     }
 
     override fun onBind(intent: Intent?): IBinder = messenger.binder
 
     override fun onDestroy() {
+        if (instance === this) {
+            instance = null
+        }
         thread.quitSafely()
         modPeer = null
         panelPeer = null
