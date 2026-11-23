@@ -163,6 +163,20 @@ public final class PictureInPictureHelper {
 
     public static void enterPip(Activity activity, String reason) {
         if (!isSupported(activity) || !isEnabled(activity)) return;
+        enterPipInternal(activity, reason, null);
+    }
+
+    /**
+     * Manual PiP for rotate-to-mod-remote. Independent of the minimize setting.
+     * Forces a landscape 16:9 aspect; keeps {@code setAutoEnterEnabled} tied to
+     * the existing minimize preference so Home auto-enter is not wiped.
+     */
+    public static void enterPipForRemote(Activity activity) {
+        if (!isSupported(activity)) return;
+        enterPipInternal(activity, "rotateRemote", new Rational(16, 9));
+    }
+
+    private static void enterPipInternal(Activity activity, String reason, Rational forcedRatio) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
         if (!isArmedForPip(activity)) {
             Log.i(TAG, "enterPip(" + reason + ") skipped — not armed yet");
@@ -175,7 +189,10 @@ public final class PictureInPictureHelper {
             // fullscreen buffer size, not the PiP thumb size.
             pinUnityBufferToFullscreen(activity, "beforeEnterPip");
             boolean keepAuto = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S;
-            PictureInPictureParams params = buildParams(activity, keepAuto && isArmedForPip(activity));
+            PictureInPictureParams params = buildParams(
+                    activity,
+                    keepAuto && isArmedForPip(activity),
+                    forcedRatio);
             boolean ok = activity.enterPictureInPictureMode(params);
             Log.i(TAG, "enterPictureInPictureMode(" + reason + ") → " + ok
                     + " focus=" + activity.hasWindowFocus()
@@ -585,7 +602,12 @@ public final class PictureInPictureHelper {
     }
 
     private static PictureInPictureParams buildParams(Activity activity, boolean autoEnter) {
-        Rational ratio = aspectRatio(activity);
+        return buildParams(activity, autoEnter, null);
+    }
+
+    private static PictureInPictureParams buildParams(Activity activity, boolean autoEnter,
+                                                      Rational forcedRatio) {
+        Rational ratio = forcedRatio != null ? forcedRatio : aspectRatio(activity);
         PictureInPictureParams.Builder builder = new PictureInPictureParams.Builder()
                 .setAspectRatio(ratio);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {

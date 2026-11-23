@@ -21,12 +21,6 @@ public final class DeviceOrientationGate {
     private final Listener listener;
     private Boolean pendingPortrait;
     private Boolean lastStablePortrait;
-    private final Runnable commit = () -> {
-        if (pendingPortrait == null) return;
-        if (pendingPortrait.equals(lastStablePortrait)) return;
-        lastStablePortrait = pendingPortrait;
-        listener.onStableOrientation(pendingPortrait);
-    };
 
     public DeviceOrientationGate(Context context, Listener listener) {
         this.listener = listener;
@@ -41,6 +35,15 @@ public final class DeviceOrientationGate {
                 main.postDelayed(commit, STABLE_MS);
             }
         };
+    }
+
+    private final Runnable commit = this::fireStable;
+
+    private void fireStable() {
+        if (pendingPortrait == null) return;
+        if (pendingPortrait.equals(lastStablePortrait)) return;
+        lastStablePortrait = pendingPortrait;
+        listener.onStableOrientation(pendingPortrait);
     }
 
     static boolean isPortraitAngle(int angle) {

@@ -245,6 +245,11 @@ public final class GameRuntime {
                 } catch (Throwable t) {
                     Log.e("GameRuntime", "PiP onResume failed", t);
                 }
+                try {
+                    RotatePipRemoteController.attach(activity);
+                } catch (Throwable t) {
+                    Log.e("GameRuntime", "RotatePipRemote attach failed", t);
+                }
             }
         }
         @Override public void callActivityOnPause(Activity activity) {
@@ -271,6 +276,13 @@ public final class GameRuntime {
             original.callActivityOnNewIntent(activity, target != null ? target : intent);
         }
         @Override public void callActivityOnDestroy(Activity activity) {
+            if (gameActivities.contains(activity)) {
+                try {
+                    RotatePipRemoteController.detach(activity);
+                } catch (Throwable t) {
+                    Log.e("GameRuntime", "RotatePipRemote detach failed", t);
+                }
+            }
             pendingIntents.remove(activity);
             gameActivities.remove(activity);
             original.callActivityOnDestroy(activity);
