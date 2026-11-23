@@ -11,6 +11,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -59,7 +61,8 @@ fun ModpackListScreen(
     onExportModpack: (String) -> Unit,
     onImportModpack: () -> Unit,
     onRefresh: () -> Unit = {},
-    onImportDownloadFiles: (List<File>) -> Unit = {}
+    onImportDownloadFiles: (List<File>) -> Unit = {},
+    embedded: Boolean = false
 ) {
     val context = LocalContext.current
     val manager = remember { ModpackManager() }
@@ -124,122 +127,150 @@ fun ModpackListScreen(
         actionsExpanded = false
     }
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(R.string.modpack_title),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                },
-                actions = {
-                    IconButton(onClick = onRefresh) {
-                        Icon(
-                            imageVector = Icons.Filled.Refresh,
-                            contentDescription = stringResource(R.string.refresh)
-                        )
-                    }
-                },
-                windowInsets = WindowInsets.safeDrawing.only(
-                    WindowInsetsSides.Horizontal + WindowInsetsSides.Top
-                ),
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
-        },
-        floatingActionButton = {
-            ModpackActionsFab(
-                expanded = actionsExpanded,
-                onExpandedChange = { actionsExpanded = it },
-                onCreate = {
-                    collapseActions()
-                    showFabCreateDialog = true
-                },
-                onImport = {
-                    collapseActions()
-                    onImportModpack()
-                },
-                onAutoImport = {
-                    collapseActions()
-                    scanDownloads()
-                },
+    val packCards: @Composable () -> Unit = {
+        if (isSwitching) {
+            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            Text(
+                text = stringResource(R.string.modpack_switching),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-    ) { padding ->
+        if (!embedded && targetGameLabel.isNotBlank()) {
+            Text(
+                text = stringResource(R.string.modpack_target_game, targetGameLabel),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        VanillaCard(
+            isActive = activeModpackName == null,
+            onSelect = { onSelectModpack(null) },
+        )
+        if (modpacks.isEmpty()) {
+            EmptyModpacksCard()
+        } else {
+            modpacks.forEach { modpack ->
+                key(modpack.name, combinedIconRefreshKey) {
+                    ModpackCard(
+                        modpack = modpack,
+                        packageName = packageName,
+                        gameVersion = gameVersion,
+                        iconRefreshKey = combinedIconRefreshKey,
+                        isActive = activeModpackName == modpack.name,
+                        onOpen = { onOpenModpack(modpack.name) },
+                        onSelect = { onSelectModpack(modpack.name) },
+                        onIconClick = {
+                            editingIconForModpack = modpack.name
+                            imagePicker.launch("image/*")
+                        },
+                        onEdit = { showEditDialog = modpack },
+                        onDelete = { showDeleteDialog = modpack.name },
+                    )
+                }
+            }
+        }
+    }
+
+    if (embedded) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            if (isSwitching) {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                Text(
-                    text = stringResource(R.string.modpack_switching),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-            }
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(top = 8.dp, bottom = 96.dp)
-        ) {
-            if (targetGameLabel.isNotBlank()) {
-                item(key = "game_label") {
-                    Text(
-                        text = stringResource(R.string.modpack_target_game, targetGameLabel),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+            Text(
+                text = stringResource(R.string.modpack_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilledTonalButton(
+                    onClick = { showFabCreateDialog = true },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(stringResource(R.string.modpack_create))
+                }
+                FilledTonalButton(
+                    onClick = onImportModpack,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(stringResource(R.string.modpack_import))
                 }
             }
-            item(key = "vanilla") {
-                VanillaCard(
-                    isActive = activeModpackName == null,
-                    onSelect = { onSelectModpack(null) },
-                )
-            }
-
-            if (modpacks.isEmpty()) {
-                item {
-                    EmptyModpacksCard()
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(onClick = { scanDownloads() }, enabled = !scanningDownloads) {
+                    Text(stringResource(R.string.modpack_import_auto_scan))
                 }
-            } else {
-                items(modpacks, key = { it.name }) { modpack ->
-                    val isFirst = modpack.name == modpacks.first().name
-                    // Force recomposition when internalIconRefreshKey changes
-                    key(combinedIconRefreshKey) {
-                        ModpackCard(
-                            modpack = modpack,
-                            packageName = packageName,
-                            gameVersion = gameVersion,
-                            iconRefreshKey = combinedIconRefreshKey,
-                            isActive = activeModpackName == modpack.name,
-                            onOpen = { onOpenModpack(modpack.name) },
-                            onSelect = { onSelectModpack(modpack.name) },
-                            onIconClick = {
-                                editingIconForModpack = modpack.name
-                                imagePicker.launch("image/*")
-                            },
-                            onEdit = { showEditDialog = modpack },
-                            onDelete = { showDeleteDialog = modpack.name },
-                        )
-                    }
+                TextButton(onClick = onRefresh) {
+                    Text(stringResource(R.string.refresh))
                 }
             }
-
-            item { Spacer(Modifier.height(16.dp)) }
+            packCards()
         }
+    } else {
+        Scaffold(
+            containerColor = MaterialTheme.colorScheme.background,
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = stringResource(R.string.modpack_title),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    },
+                    actions = {
+                        IconButton(onClick = onRefresh) {
+                            Icon(
+                                imageVector = Icons.Filled.Refresh,
+                                contentDescription = stringResource(R.string.refresh)
+                            )
+                        }
+                    },
+                    windowInsets = WindowInsets.safeDrawing.only(
+                        WindowInsetsSides.Horizontal + WindowInsetsSides.Top
+                    ),
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
+                )
+            },
+            floatingActionButton = {
+                ModpackActionsFab(
+                    expanded = actionsExpanded,
+                    onExpandedChange = { actionsExpanded = it },
+                    onCreate = {
+                        collapseActions()
+                        showFabCreateDialog = true
+                    },
+                    onImport = {
+                        collapseActions()
+                        onImportModpack()
+                    },
+                    onAutoImport = {
+                        collapseActions()
+                        scanDownloads()
+                    },
+                )
+            }
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 16.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Spacer(Modifier.height(8.dp))
+                packCards()
+                Spacer(Modifier.height(96.dp))
+            }
         }
     }
 

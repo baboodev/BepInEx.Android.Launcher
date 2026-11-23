@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import com.bepinex.android.R
+import com.bepinex.android.ui.components.BugtopiaTitle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -138,7 +139,13 @@ fun LogViewerScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.log_title)) },
+                title = {
+                    if (showBackButton) {
+                        Text(stringResource(R.string.log_title))
+                    } else {
+                        BugtopiaTitle(title = stringResource(R.string.log_title))
+                    }
+                },
                 navigationIcon = {
                     if (showBackButton) {
                         IconButton(onClick = onNavigateBack) {

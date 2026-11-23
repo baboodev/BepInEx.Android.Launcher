@@ -3,7 +3,6 @@ package com.bepinex.android.ui.screens
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -16,7 +15,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Info
@@ -25,7 +25,6 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.Announcement
-import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -63,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.bepinex.android.BepInExLog
+import com.bepinex.android.ui.components.BugtopiaTitle
 import com.bepinex.android.GameDetector
 import com.bepinex.android.HeartopiaProfiles
 import com.bepinex.android.HeartopiaReadiness
@@ -73,7 +73,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * Heartopia home: install status, launch, readiness actions, and save profiles.
+ * Heartopia home: install status, launch, modpacks, readiness, and save profiles.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,9 +89,9 @@ fun PlayScreen(
     onRescan: () -> Unit,
     onLaunch: () -> Unit,
     onExtractFramework: () -> Unit,
-    onGameSettings: () -> Unit,
     onExportLogs: () -> Unit,
-    onShowAnnouncement: () -> Unit
+    onShowAnnouncement: () -> Unit,
+    modpackSection: @Composable () -> Unit = {}
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -154,14 +154,10 @@ fun PlayScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Column {
-                        Text(stringResource(R.string.play_title), fontWeight = FontWeight.Bold)
-                        Text(
-                            stringResource(R.string.play_subtitle),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    BugtopiaTitle(
+                        title = stringResource(R.string.play_title),
+                        subtitle = stringResource(R.string.play_subtitle)
+                    )
                 },
                 windowInsets = WindowInsets.safeDrawing.only(
                     WindowInsetsSides.Horizontal + WindowInsetsSides.Top
@@ -183,37 +179,33 @@ fun PlayScreen(
             )
         }
     ) { padding ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
-            contentPadding = PaddingValues(16.dp),
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             if (showIncompleteBanner) {
-                item {
-                    Text(
-                        text = stringResource(R.string.lang_incomplete_message),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            }
-            item {
-                StatusCard(
-                    game = game,
-                    isScanning = isScanning,
-                    isExtracting = isExtracting,
-                    extractionStatus = extractionStatus,
-                    activeModpackName = activeModpackName,
-                    isSwitchingModpack = isSwitchingModpack,
-                    onLaunch = onLaunch,
-                    onGameSettings = onGameSettings,
-                    onRescan = onRescan
+                Text(
+                    text = stringResource(R.string.lang_incomplete_message),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
                 )
             }
-            item {
-                ReadinessCard(
+            StatusCard(
+                game = game,
+                isScanning = isScanning,
+                isExtracting = isExtracting,
+                extractionStatus = extractionStatus,
+                activeModpackName = activeModpackName,
+                isSwitchingModpack = isSwitchingModpack,
+                onLaunch = onLaunch,
+                onRescan = onRescan
+            )
+            modpackSection()
+            ReadinessCard(
                     report = report,
                     busy = busy,
                     isExtracting = isExtracting,
@@ -230,9 +222,7 @@ fun PlayScreen(
                         }
                     }
                 )
-            }
-            item {
-                ProfilesCard(
+            ProfilesCard(
                     snapshot = profiles,
                     name = profileName,
                     busy = busy != null,
@@ -252,7 +242,6 @@ fun PlayScreen(
                     },
                     onDelete = { pendingDelete = it }
                 )
-            }
         }
     }
 
@@ -289,7 +278,6 @@ private fun StatusCard(
     activeModpackName: String?,
     isSwitchingModpack: Boolean,
     onLaunch: () -> Unit,
-    onGameSettings: () -> Unit,
     onRescan: () -> Unit
 ) {
     Card(
@@ -344,20 +332,13 @@ private fun StatusCard(
                 if (isSwitchingModpack) {
                     Text(stringResource(R.string.modpack_switching))
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(
-                        onClick = onLaunch,
-                        enabled = !isExtracting && !isSwitchingModpack
-                    ) {
-                        Icon(Icons.Filled.PlayArrow, contentDescription = null)
-                        Spacer(Modifier.width(6.dp))
-                        Text(stringResource(R.string.launch))
-                    }
-                    OutlinedButton(onClick = onGameSettings) {
-                        Icon(Icons.Outlined.Tune, contentDescription = null)
-                        Spacer(Modifier.width(6.dp))
-                        Text(stringResource(R.string.play_game_options))
-                    }
+                Button(
+                    onClick = onLaunch,
+                    enabled = !isExtracting && !isSwitchingModpack
+                ) {
+                    Icon(Icons.Filled.PlayArrow, contentDescription = null)
+                    Spacer(Modifier.width(6.dp))
+                    Text(stringResource(R.string.launch))
                 }
             }
         }

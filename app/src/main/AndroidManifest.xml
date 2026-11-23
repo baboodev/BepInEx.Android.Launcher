@@ -86,6 +86,9 @@
              InstrumentationHooks rewrites startActivity to this stub, then
              restores the real game Activity in Instrumentation.newActivity.
              Runs in :game (same process as BootstrapActivity). -->
+        <!-- enableOnBackInvokedCallback=false: Unity 2020 PlayerActivity only handles
+             KEYCODE_BACK via onKeyUp/onBackPressed → Escape. With targetSdk 35 the
+             predictive-back dispatcher swallows BACK and LoginPanel sees nothing. -->
         <activity
             android:name="com.bepinex.android.StubActivity"
             android:theme="@style/UnityThemeSelector"
@@ -95,6 +98,7 @@
             android:launchMode="standard"
             android:supportsPictureInPicture="true"
             android:resizeableActivity="true"
+            android:enableOnBackInvokedCallback="false"
             android:exported="false" />
 
         <!-- Secondary stub used when the running game starts its own activities.
@@ -109,6 +113,7 @@
             android:launchMode="standard"
             android:supportsPictureInPicture="true"
             android:resizeableActivity="true"
+            android:enableOnBackInvokedCallback="false"
             android:exported="false" />
 
         <!-- Handles desktop shortcut intents for modpack quick-launch -->

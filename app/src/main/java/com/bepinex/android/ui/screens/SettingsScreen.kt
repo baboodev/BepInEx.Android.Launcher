@@ -20,15 +20,19 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.outlined.ColorLens
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Language
-import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Animation
-import androidx.compose.material.icons.outlined.Terminal
+import androidx.compose.material.icons.outlined.Code
+import androidx.compose.material.icons.outlined.ColorLens
+import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.DeleteForever
+import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.automirrored.outlined.Login
+import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.PictureInPictureAlt
 import androidx.compose.material.icons.outlined.ScreenRotation
+import androidx.compose.material.icons.outlined.Shield
+import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -54,11 +58,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.bepinex.android.R
+import com.bepinex.android.auth.XdGoogleWebAuth
 import com.bepinex.android.settings.AppSettings
+import com.bepinex.android.ui.components.BugtopiaTitle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/** Settings screen with appearance options and an About entry. */
+/** Appearance, in-game, account, and maintenance settings for Heartopia. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -66,11 +72,20 @@ fun SettingsScreen(
     language: AppSettings.Language,
     dynamicColor: Boolean,
     animationDisabled: Boolean,
-    onNavigateToAbout: () -> Unit,
+    packageName: String,
+    blockUnityKill: Boolean,
+    useUnstrippedLibUnity: Boolean,
     onThemeChanged: (AppSettings.ThemeMode) -> Unit,
     onLanguageChanged: (AppSettings.Language) -> Unit,
     onDynamicColorChanged: (Boolean) -> Unit,
     onAnimationDisabledChanged: (Boolean) -> Unit,
+    onBlockUnityKillChanged: (Boolean) -> Unit,
+    onUseUnstrippedLibUnityChanged: (Boolean) -> Unit,
+    onClearBepInEx: () -> Unit,
+    onClearDotnet: () -> Unit,
+    onClearLibUnity: () -> Unit,
+    onCopyGameResources: () -> Unit,
+    onGoogleWebLogin: () -> Unit,
     isLanguageIncompleteShown: Boolean,
     onLanguageIncompleteShown: () -> Unit
 ) {
@@ -89,13 +104,14 @@ fun SettingsScreen(
     var rotateToModRemote by remember {
         mutableStateOf(AppSettings.isRotateToModRemoteEnabled(context))
     }
+    var confirmAction by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.settings_title)) },
+                title = { BugtopiaTitle(title = stringResource(R.string.settings_title)) },
                 windowInsets = WindowInsets.safeDrawing.only(
                     WindowInsetsSides.Horizontal + WindowInsetsSides.Top
                 ),
@@ -166,6 +182,34 @@ fun SettingsScreen(
             item { SettingsSectionHeader(stringResource(R.string.settings_section_ingame)) }
             item {
                 SettingListItem(
+                    title = stringResource(R.string.settings_block_unity_kill),
+                    summary = stringResource(R.string.settings_block_unity_kill_desc),
+                    icon = { Icon(Icons.Outlined.Shield, contentDescription = null) },
+                    trailing = {
+                        Switch(
+                            checked = blockUnityKill,
+                            onCheckedChange = onBlockUnityKillChanged
+                        )
+                    },
+                    onClick = { onBlockUnityKillChanged(!blockUnityKill) }
+                )
+            }
+            item {
+                SettingListItem(
+                    title = stringResource(R.string.settings_unstripped_libunity),
+                    summary = stringResource(R.string.settings_unstripped_libunity_desc),
+                    icon = { Icon(Icons.Outlined.Code, contentDescription = null) },
+                    trailing = {
+                        Switch(
+                            checked = useUnstrippedLibUnity,
+                            onCheckedChange = onUseUnstrippedLibUnityChanged
+                        )
+                    },
+                    onClick = { onUseUnstrippedLibUnityChanged(!useUnstrippedLibUnity) }
+                )
+            }
+            item {
+                SettingListItem(
                     title = stringResource(R.string.settings_floating_log),
                     summary = stringResource(R.string.settings_floating_log_desc),
                     icon = { Icon(Icons.Outlined.Terminal, contentDescription = null) },
@@ -230,13 +274,49 @@ fun SettingsScreen(
                 }
             }
 
-            item { SettingsSectionHeader(stringResource(R.string.settings_about)) }
+            if (XdGoogleWebAuth.isHeartopia(packageName)) {
+                item { SettingsSectionHeader(stringResource(R.string.settings_section_account)) }
+                item {
+                    SettingListItem(
+                        title = stringResource(R.string.settings_google_web_login),
+                        summary = stringResource(R.string.settings_google_web_login_desc),
+                        icon = { Icon(Icons.AutoMirrored.Outlined.Login, contentDescription = null) },
+                        onClick = onGoogleWebLogin
+                    )
+                }
+            }
+
+            item { SettingsSectionHeader(stringResource(R.string.settings_section_maintenance)) }
             item {
                 SettingListItem(
-                    title = stringResource(R.string.settings_about),
-                    icon = { Icon(Icons.Outlined.Info, contentDescription = null) },
-                    trailing = { Icon(Icons.Filled.ChevronRight, contentDescription = null) },
-                    onClick = onNavigateToAbout
+                    title = stringResource(R.string.settings_clear_bepinex),
+                    summary = stringResource(R.string.settings_clear_bepinex_desc),
+                    icon = { Icon(Icons.Outlined.DeleteForever, contentDescription = null) },
+                    onClick = { confirmAction = "bepinex" }
+                )
+            }
+            item {
+                SettingListItem(
+                    title = stringResource(R.string.settings_clear_dotnet),
+                    summary = stringResource(R.string.settings_clear_dotnet_desc),
+                    icon = { Icon(Icons.Outlined.Delete, contentDescription = null) },
+                    onClick = { confirmAction = "dotnet" }
+                )
+            }
+            item {
+                SettingListItem(
+                    title = stringResource(R.string.settings_clear_libunity),
+                    summary = stringResource(R.string.settings_clear_libunity_desc),
+                    icon = { Icon(Icons.Outlined.Delete, contentDescription = null) },
+                    onClick = { confirmAction = "libunity" }
+                )
+            }
+            item {
+                SettingListItem(
+                    title = stringResource(R.string.settings_copy_resources),
+                    summary = stringResource(R.string.settings_copy_resources_desc),
+                    icon = { Icon(Icons.Outlined.ContentCopy, contentDescription = null) },
+                    onClick = { confirmAction = "copy" }
                 )
             }
         }
@@ -294,6 +374,47 @@ fun SettingsScreen(
             dismissButton = {
                 TextButton(onClick = { showAnimationRestartDialog = false }) {
                     Text(stringResource(R.string.confirm_cancel))
+                }
+            }
+        )
+    }
+
+    confirmAction?.let { action ->
+        val (title, message, onConfirm) = when (action) {
+            "bepinex" -> Triple(
+                stringResource(R.string.confirm_clear_bepinex_title),
+                stringResource(R.string.confirm_clear_bepinex_msg),
+                { onClearBepInEx(); confirmAction = null }
+            )
+            "dotnet" -> Triple(
+                stringResource(R.string.confirm_clear_dotnet_title),
+                stringResource(R.string.confirm_clear_dotnet_msg),
+                { onClearDotnet(); confirmAction = null }
+            )
+            "copy" -> Triple(
+                stringResource(R.string.confirm_copy_resources_title),
+                stringResource(R.string.confirm_copy_resources_msg),
+                { onCopyGameResources(); confirmAction = null }
+            )
+            "libunity" -> Triple(
+                stringResource(R.string.confirm_clear_libunity_title),
+                stringResource(R.string.confirm_clear_libunity_msg),
+                { onClearLibUnity(); confirmAction = null }
+            )
+            else -> Triple("", "", { confirmAction = null })
+        }
+        AlertDialog(
+            onDismissRequest = { confirmAction = null },
+            title = { Text(title) },
+            text = { Text(message) },
+            confirmButton = {
+                TextButton(onClick = onConfirm) {
+                    Text(stringResource(R.string.confirm_yes), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmAction = null }) {
+                    Text(stringResource(R.string.confirm_no))
                 }
             }
         )

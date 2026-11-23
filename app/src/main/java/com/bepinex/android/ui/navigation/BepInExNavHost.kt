@@ -25,9 +25,9 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Article
-import androidx.compose.material.icons.filled.FolderZip
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Info
 import com.bepinex.android.auth.XdGoogleWebAuth
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -144,7 +144,7 @@ private data class VersionMismatchPrompt(
 )
 
 /**
- * Root navigation host: MAIN pager (Play / Mods / Settings / Logs) plus detail routes.
+ * Root navigation host: MAIN pager (Play / Settings / About / Logs) plus detail routes.
  */
 @Composable
 fun BepInExNavHost(
@@ -482,7 +482,9 @@ fun BepInExNavHost(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val showBottomBar = currentRoute == NavRoutes.MAIN
+    // The back stack entry is null on the first frame. Treat that as the main
+    // pager so the bar stays up; hiding it until the route resolves slides it away.
+    val showBottomBar = currentRoute == null || currentRoute == NavRoutes.MAIN
 
     val pagerState = rememberPagerState(pageCount = { 4 })
 
@@ -540,7 +542,7 @@ fun BepInExNavHost(
                 ) + fadeOut(animationSpec = tween(200))
             }
         ) {
-                // Main pager — Play, Mods, Settings, Logs
+                // Main pager — Play, Settings, About, Logs
                 composable(route = NavRoutes.MAIN) {
                     HorizontalPager(
                         state = pagerState,
@@ -570,17 +572,9 @@ fun BepInExNavHost(
                                     }
                                 },
                                 onExtractFramework = onExtractFramework,
-                                onGameSettings = {
-                                    selectedGame?.let { game ->
-                                        navController.navigate(
-                                            NavRoutes.gameSettings(game.packageName, game.label)
-                                        )
-                                    }
-                                },
                                 onExportLogs = onExportLogs,
-                                onShowAnnouncement = onShowAnnouncement
-                            )
-                            1 -> {
+                                onShowAnnouncement = onShowAnnouncement,
+                                modpackSection = {
                                 val packageName = selectedGame?.packageName
                                     ?: XdGoogleWebAuth.HEARTOPIA_PACKAGE
 
@@ -680,23 +674,69 @@ fun BepInExNavHost(
                                     onRefresh = {
                                         modpackRefreshKey++
                                         modpackIconRefreshKey++
+                                    },
+                                    embedded = true,
+                                    onImportDownloadFiles = { files ->
+                                        composeScope.launch(Dispatchers.IO) {
+                                            var imported = 0
+                                            try {
+                                                files.forEach { file ->
+                                                    if (modpackManager.importModpack(packageName, file) != null) {
+                                                        imported++
+                                                    }
+                                                }
+                                                withContext(Dispatchers.Main) {
+                                                    modpackRefreshKey++
+                                                    android.widget.Toast.makeText(
+                                                        context,
+                                                        context.getString(
+                                                            R.string.modpack_import_done,
+                                                            imported,
+                                                            files.size
+                                                        ),
+                                                        android.widget.Toast.LENGTH_SHORT
+                                                    ).show()
+                                                }
+                                            } catch (_: CancellationException) {
+                                            } catch (error: Exception) {
+                                                com.bepinex.android.BepInExLog.e("Download modpack import failed", error)
+                                                withContext(Dispatchers.Main) {
+                                                    android.widget.Toast.makeText(
+                                                        context,
+                                                        context.getString(R.string.import_failed),
+                                                        android.widget.Toast.LENGTH_SHORT
+                                                    ).show()
+                                                }
+                                            }
+                                        }
                                     }
                                 )
-                            }
-                            2 -> {
+                                }
+                            )
+                            1 -> {
                                 val settingsContext = LocalContext.current
+                                val packageName = selectedGame?.packageName
+                                    ?: XdGoogleWebAuth.HEARTOPIA_PACKAGE
                                 var dynamicColorSetting by remember {
                                     mutableStateOf(AppSettings.isDynamicColorEnabled(settingsContext))
                                 }
                                 var animationDisabledSetting by remember {
                                     mutableStateOf(AppSettings.isAnimationDisabled(settingsContext))
                                 }
+                                var blockUnityKill by remember(packageName) {
+                                    mutableStateOf(AppSettings.isUnityKillBlockEnabled(settingsContext, packageName))
+                                }
+                                var useUnstrippedLibUnity by remember(packageName) {
+                                    mutableStateOf(AppSettings.isUseUnstrippedLibUnity(settingsContext, packageName))
+                                }
                                 SettingsScreen(
                                     themeMode = themeMode,
                                     language = language,
                                     dynamicColor = dynamicColorSetting,
                                     animationDisabled = animationDisabledSetting,
-                                    onNavigateToAbout = { navController.navigate(NavRoutes.ABOUT) },
+                                    packageName = packageName,
+                                    blockUnityKill = blockUnityKill,
+                                    useUnstrippedLibUnity = useUnstrippedLibUnity,
                                     onThemeChanged = onThemeChanged,
                                     onLanguageChanged = onLanguageChanged,
                                     onDynamicColorChanged = { enabled ->
@@ -708,8 +748,35 @@ fun BepInExNavHost(
                                         AppSettings.setAnimationDisabled(settingsContext, disabled)
                                         animationDisabledSetting = disabled
                                     },
+                                    onBlockUnityKillChanged = { enabled ->
+                                        AppSettings.setUnityKillBlockEnabled(settingsContext, packageName, enabled)
+                                        blockUnityKill = enabled
+                                    },
+                                    onUseUnstrippedLibUnityChanged = { enabled ->
+                                        AppSettings.setUseUnstrippedLibUnity(settingsContext, packageName, enabled)
+                                        useUnstrippedLibUnity = enabled
+                                    },
+                                    onClearBepInEx = { onClearBepInEx(packageName) },
+                                    onClearDotnet = { onClearDotnet(packageName) },
+                                    onClearLibUnity = { onClearLibUnity(packageName) },
+                                    onCopyGameResources = { onCopyGameResources(packageName) },
+                                    onGoogleWebLogin = {
+                                        com.bepinex.android.auth.XdGoogleWebAuth.start(settingsContext)
+                                    },
                                     isLanguageIncompleteShown = AppSettings.isLanguageIncompleteShown(settingsContext),
                                     onLanguageIncompleteShown = { AppSettings.setLanguageIncompleteShown(settingsContext, true) }
+                                )
+                            }
+                            2 -> {
+                                val aboutContext = LocalContext.current
+                                val versionName = runCatching {
+                                    aboutContext.packageManager.getPackageInfo(aboutContext.packageName, 0).versionName ?: "1.0"
+                                }.getOrDefault("1.0")
+                                AboutScreen(
+                                    versionName = versionName,
+                                    onNavigateBack = {},
+                                    onNavigateToCredits = { navController.navigate(NavRoutes.CREDITS) },
+                                    showBackButton = false
                                 )
                             }
                             3 -> {
@@ -1038,49 +1105,6 @@ fun BepInExNavHost(
                     )
                 }
 
-                // Per-game settings (B-specific)
-                composable(
-                    route = NavRoutes.GAME_SETTINGS,
-                    arguments = listOf(
-                        navArgument("packageName") { type = NavType.StringType },
-                        navArgument("gameLabel") { type = NavType.StringType }
-                    )
-                ) { backStackEntry ->
-                    val pkg = backStackEntry.arguments?.getString("packageName") ?: return@composable
-                    val label = java.net.URLDecoder.decode(
-                        backStackEntry.arguments?.getString("gameLabel") ?: "", "UTF-8"
-                    )
-                    val gsContext = LocalContext.current
-                    var gsBlockKill by remember(pkg) {
-                        mutableStateOf(AppSettings.isUnityKillBlockEnabled(gsContext, pkg))
-                    }
-                    var gsUnstripped by remember(pkg) {
-                        mutableStateOf(AppSettings.isUseUnstrippedLibUnity(gsContext, pkg))
-                    }
-                    GameSettingsScreen(
-                        packageName = pkg,
-                        gameLabel = label,
-                        blockUnityKill = gsBlockKill,
-                        useUnstrippedLibUnity = gsUnstripped,
-                        onNavigateBack = { navController.safePopBackStack() },
-                        onBlockUnityKillChanged = { enabled ->
-                            AppSettings.setUnityKillBlockEnabled(gsContext, pkg, enabled)
-                            gsBlockKill = enabled
-                        },
-                        onUseUnstrippedLibUnityChanged = { enabled ->
-                            AppSettings.setUseUnstrippedLibUnity(gsContext, pkg, enabled)
-                            gsUnstripped = enabled
-                        },
-                        onClearBepInEx = { onClearBepInEx(pkg) },
-                        onClearDotnet = { onClearDotnet(pkg) },
-                        onClearLibUnity = { onClearLibUnity(pkg) },
-                        onCopyGameResources = { onCopyGameResources(pkg) },
-                        onGoogleWebLogin = {
-                            com.bepinex.android.auth.XdGoogleWebAuth.start(gsContext)
-                        }
-                    )
-                }
-
                 // About
                 composable(route = NavRoutes.ABOUT) {
                     val aboutContext = LocalContext.current
@@ -1189,14 +1213,14 @@ fun BepInExNavHost(
                     NavigationRailItem(
                         selected = pagerState.currentPage == 1,
                         onClick = { composeScope.launch { if (animationDisabled) pagerState.scrollToPage(1) else pagerState.animateScrollToPage(1) } },
-                        icon = { Icon(Icons.Filled.FolderZip, stringResource(R.string.nav_mods)) },
-                        label = { Text(stringResource(R.string.nav_mods)) }
+                        icon = { Icon(Icons.Filled.Settings, stringResource(R.string.nav_settings)) },
+                        label = { Text(stringResource(R.string.nav_settings)) }
                     )
                     NavigationRailItem(
                         selected = pagerState.currentPage == 2,
                         onClick = { composeScope.launch { if (animationDisabled) pagerState.scrollToPage(2) else pagerState.animateScrollToPage(2) } },
-                        icon = { Icon(Icons.Filled.Settings, stringResource(R.string.nav_settings)) },
-                        label = { Text(stringResource(R.string.nav_settings)) }
+                        icon = { Icon(Icons.Outlined.Info, stringResource(R.string.nav_about)) },
+                        label = { Text(stringResource(R.string.nav_about)) }
                     )
                     NavigationRailItem(
                         selected = pagerState.currentPage == 3,
@@ -1251,8 +1275,8 @@ fun BepInExNavHost(
                         }
                     }
                 },
-                icon = { Icon(Icons.Filled.FolderZip, stringResource(R.string.nav_mods)) },
-                label = { Text(stringResource(R.string.nav_mods)) }
+                icon = { Icon(Icons.Filled.Settings, stringResource(R.string.nav_settings)) },
+                label = { Text(stringResource(R.string.nav_settings)) }
             )
             NavigationBarItem(
                 selected = pagerState.currentPage == 2,
@@ -1264,8 +1288,8 @@ fun BepInExNavHost(
                         }
                     }
                 },
-                icon = { Icon(Icons.Filled.Settings, stringResource(R.string.nav_settings)) },
-                label = { Text(stringResource(R.string.nav_settings)) }
+                icon = { Icon(Icons.Outlined.Info, stringResource(R.string.nav_about)) },
+                label = { Text(stringResource(R.string.nav_about)) }
             )
             NavigationBarItem(
                 selected = pagerState.currentPage == 3,

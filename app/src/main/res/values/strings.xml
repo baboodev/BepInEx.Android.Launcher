@@ -62,6 +62,7 @@
     <string name="share_modpack">Share Modpack</string>
     <string name="export_failed">Export failed</string>
     <string name="modpack_import">Import Modpack</string>
+    <string name="modpack_import_done">Imported %1$d of %2$d modpack(s)</string>
     <string name="modpack_import_auto_scan">Auto Scan</string>
     <string name="modpack_import_manual">Manual Import</string>
     <string name="modpack_importing">Importing modpack…</string>
@@ -245,15 +246,21 @@
 
     <!-- About -->
     <string name="about_title">Bugtopia</string>
-    <string name="about_description">Heartopia launcher for Android. Loads BepInEx into com.xd.xdtglobal.gp, with modpacks and save profiles.</string>
-    <string name="about_disclaimer">Bugtopia is based on NextBep BepInEx.Android. It is not an official Heartopia or BepInEx release.</string>
-    <string name="about_projects_section">Projects Used &amp; Referenced</string>
+    <string name="about_description">Android launcher for Heartopia. Loads the Bugtopia mod, with modpacks and save profiles.</string>
+    <string name="about_disclaimer">Bugtopia is not an official Heartopia app.</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_package">org.bugtopia.mod</string>
+    <string name="about_news">Bugtopia News</string>
+    <string name="about_news_desc">Telegram channel</string>
+    <string name="about_url_telegram">https://t.me/bugtopiamod</string>
+    <string name="about_credits_intro">Bugtopia for Heartopia is built on these projects. Thanks to their authors.</string>
+    <string name="about_projects_section">Thanks</string>
     <string name="about_project_bepinex_name">BepInEx</string>
     <string name="about_project_bepinex_desc">Unity IL2CPP modding framework — the core plugin loader. BepInEx 6.0.0-pre.2 by BepInEx team.</string>
     <string name="about_project_fusioncore_name">FusionCore</string>
     <string name="about_project_fusioncore_desc">Starlight team\'s Android Unity IL2CPP Runtime Container. Main reference for injection chain, Pine hooks, and NativeLoader architecture.</string>
     <string name="about_project_nextbep_name">NextBep (BepInEx.Android)</string>
-    <string name="about_project_nextbep_desc">Our custom BepInEx fork for Android. Adapts BepInEx 6 for embedded CoreCLR + IL2CPP interop.</string>
+    <string name="about_project_nextbep_desc">Android BepInEx launcher this app is based on. Thanks to the NextBep authors.</string>
     <string name="about_project_dotnet_name">dotnet/runtime</string>
     <string name="about_project_dotnet_desc">Microsoft .NET Runtime v10.0.5. Built from source with OpenSSL crypto backend to fix BoringSSL SIGSEGV on Android 16.</string>
     <string name="about_project_openssl_name">OpenSSL</string>
@@ -272,16 +279,16 @@
     <string name="about_url_pine">https://github.com/canyie/Pine</string>
     <string name="about_url_dobby">https://github.com/jmpews/Dobby</string>
     <string name="about_url_cpp2il">https://github.com/SamboyCoding/Cpp2IL</string>
-    <string name="about_dev_section">Lead Developers</string>
+    <string name="about_dev_section">Upstream launcher</string>
     <string name="about_dev_names">HayashiUme</string>
-    <string name="about_footer">©2026 NextBep</string>
+    <string name="about_footer">Bugtopia for Heartopia</string>
     <string name="about_sponsor">Sponsor</string>
     <string name="about_sponsor_desc">Support the development</string>
     <string name="about_sponsor_code_desc">Sponsor QR Code</string>
     <string name="about_sponsor_tipping">Support the development via tipping</string>
     <string name="about_sponsor_note">Sponsorship is voluntary. You will not receive any rewards or privileges within the launcher.</string>
     <string name="about_credits">Credits</string>
-    <string name="about_credits_desc">Projects and developers</string>
+    <string name="about_credits_desc">Projects this launcher is built on</string>
     <string name="about_contact">Contact Us</string>
     <string name="about_contact_desc">Get help or give feedback</string>
     <string name="about_privacy_policy">Privacy Policy</string>

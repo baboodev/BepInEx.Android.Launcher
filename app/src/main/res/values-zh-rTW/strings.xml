@@ -59,6 +59,7 @@
     <string name="share_modpack">分享整合包</string>
     <string name="export_failed">匯出失敗</string>
     <string name="modpack_import">匯入整合包</string>
+    <string name="modpack_import_done">已匯入 %1$d / %2$d 個整合包</string>
     <string name="modpack_import_auto_scan">自動掃描</string>
     <string name="modpack_import_manual">手動匯入</string>
     <string name="modpack_importing">正在匯入整合包…</string>
@@ -176,6 +177,9 @@
     <string name="settings_title">設定</string>
     <string name="settings_section_appearance">外觀</string>
     <string name="settings_section_ingame">遊戲內</string>
+    <string name="settings_section_account">帳號</string>
+    <string name="settings_google_web_login">Google 登入（網頁）</string>
+    <string name="settings_google_web_login_desc">開啟 XD 瀏覽器授權（電腦版流程）。繞過啟動器下的 GMS 錯誤 10。</string>
     <string name="settings_section_maintenance">維護</string>
     <string name="settings_section_config">設定檔</string>
     <string name="settings_clear_bepinex">清除 BepInEx 檔案</string>
@@ -238,15 +242,21 @@
 
     <!-- About -->
     <string name="about_title">Bugtopia</string>
-    <string name="about_description">Heartopia（com.xd.xdtglobal.gp）的 Android 啟動器，包含 BepInEx、模組和存檔設定。</string>
-    <string name="about_disclaimer">Bugtopia 基於 NextBep BepInEx.Android，不是 Heartopia 或 BepInEx 的官方版本。</string>
-    <string name="about_projects_section">本專案使用 &amp; 借鑑的專案</string>
+    <string name="about_description">Heartopia 的 Android 啟動器。載入 Bugtopia 模組，並提供整合包和存檔設定。</string>
+    <string name="about_disclaimer">Bugtopia 不是 Heartopia 的官方應用程式。</string>
+    <string name="about_version">版本 %1$s</string>
+    <string name="about_package">org.bugtopia.mod</string>
+    <string name="about_news">Bugtopia 動態</string>
+    <string name="about_news_desc">Telegram 頻道</string>
+    <string name="about_url_telegram">https://t.me/bugtopiamod</string>
+    <string name="about_credits_intro">Bugtopia for Heartopia 建立在這些專案之上。感謝它們的作者。</string>
+    <string name="about_projects_section">致謝</string>
     <string name="about_project_bepinex_name">BepInEx</string>
     <string name="about_project_bepinex_desc">Unity IL2CPP 模組框架 — 核心外掛載入器。BepInEx 6.0.0-pre.2，由 BepInEx 團隊開發。</string>
     <string name="about_project_fusioncore_name">FusionCore</string>
     <string name="about_project_fusioncore_desc">Starlight 團隊的 Android Unity IL2CPP 執行階段容器。注入鏈、Pine Hook 與 NativeLoader 架構的主要參考。</string>
     <string name="about_project_nextbep_name">NextBep (BepInEx.Android)</string>
-    <string name="about_project_nextbep_desc">我們客製化的 Android BepInEx 分支。將 BepInEx 6 適配到嵌入式 CoreCLR + IL2CPP interop。</string>
+    <string name="about_project_nextbep_desc">本啟動器所基於的 Android BepInEx 啟動器。感謝 NextBep 的作者。</string>
     <string name="about_project_dotnet_name">dotnet/runtime</string>
     <string name="about_project_dotnet_desc">Microsoft .NET 執行階段 v10.0.5。從原始碼建置，使用 OpenSSL 加密後端修復 Android 16 上的 BoringSSL SIGSEGV 崩潰。</string>
     <string name="about_project_openssl_name">OpenSSL</string>
@@ -265,16 +275,16 @@
     <string name="about_url_pine">https://github.com/canyie/Pine</string>
     <string name="about_url_dobby">https://github.com/jmpews/Dobby</string>
     <string name="about_url_cpp2il">https://github.com/SamboyCoding/Cpp2IL</string>
-    <string name="about_dev_section">主要開發者</string>
+    <string name="about_dev_section">上游啟動器</string>
     <string name="about_dev_names">HayashiUme</string>
-    <string name="about_footer">©2026 NextBep</string>
+    <string name="about_footer">Bugtopia for Heartopia</string>
     <string name="about_sponsor">贊助</string>
     <string name="about_sponsor_desc">支持開發</string>
     <string name="about_sponsor_code_desc">贊助 QR Code</string>
     <string name="about_sponsor_tipping">透過贊助支持開發</string>
     <string name="about_sponsor_note">贊助為自願行為，您不會在啟動器內獲得任何獎勵與特權。</string>
     <string name="about_credits">致謝</string>
-    <string name="about_credits_desc">專案與開發者</string>
+    <string name="about_credits_desc">本啟動器所用的專案與作者</string>
     <string name="about_contact">聯絡我們</string>
     <string name="about_contact_desc">取得協助或提供回饋</string>
     <string name="about_privacy_policy">隱私權政策</string>
