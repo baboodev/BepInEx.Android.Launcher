@@ -21,7 +21,8 @@ import java.util.concurrent.ConcurrentHashMap
 class ModSettingsClient {
     companion object {
         private const val TAG = "BugtopiaModSettingsClient"
-        private const val TIMEOUT_MS = 3_000L
+        // Schema build + JNI pack on the mod side can exceed a few seconds on first open.
+        private const val TIMEOUT_MS = 30_000L
     }
 
     private val thread = HandlerThread("ModSettingsPanel").also { it.start() }
@@ -83,6 +84,11 @@ class ModSettingsClient {
     suspend fun getSchema(): String {
         val msg = request(ModSettingsProtocol.MSG_GET_SCHEMA, ModSettingsProtocol.MSG_SCHEMA) {}
         val json = msg.data.getString(ModSettingsProtocol.KEY_SCHEMA_JSON).orEmpty()
+        if (json.isEmpty()) {
+            Log.w(TAG, "getSchema empty")
+        } else {
+            Log.i(TAG, "getSchema bytes=${json.length}")
+        }
         onSchema?.invoke(json)
         return json
     }
@@ -160,16 +166,37 @@ class ModSettingsClient {
     }
 
     private fun onReply(msg: Message) {
-        when (msg.what) {
+        // Looper recycles msg (and nulls its Bundle) as soon as this handler returns.
+        // The waiter resumes on the main thread after that, so it must own a copy.
+        if (msg.what == ModSettingsProtocol.MSG_SCHEMA) {
+            val arrived = msg.peekData()?.getString(ModSettingsProtocol.KEY_SCHEMA_JSON)?.length ?: -1
+            Log.i(TAG, "onReply schemaBytes=$arrived")
+        }
+        val snapshot = snapshotMessage(msg)
+        when (snapshot.what) {
             ModSettingsProtocol.MSG_PUSH_STATE -> {
-                onPushState?.invoke(msg.data.getString(ModSettingsProtocol.KEY_VALUES_JSON).orEmpty())
+                onPushState?.invoke(snapshot.data.getString(ModSettingsProtocol.KEY_VALUES_JSON).orEmpty())
                 return
             }
             ModSettingsProtocol.MSG_ERROR -> {
-                _lastError.value = msg.data.getString(ModSettingsProtocol.KEY_ERROR)
+                _lastError.value = snapshot.data.getString(ModSettingsProtocol.KEY_ERROR)
             }
         }
-        val reqId = msg.data.getString(ModSettingsProtocol.KEY_REQ_ID) ?: return
-        pending.remove(reqId)?.complete(msg)
+        val reqId = snapshot.data.getString(ModSettingsProtocol.KEY_REQ_ID) ?: return
+        pending.remove(reqId)?.complete(snapshot)
+    }
+
+    private fun snapshotMessage(msg: Message): Message {
+        val data = Bundle()
+        val src = msg.peekData()
+        if (src != null) {
+            // Unparcel first, then copy map entries. Bundle(src) can share the
+            // parcelled byte buffer that recycle drops with the original Message.
+            src.keySet()
+            data.putAll(src)
+        }
+        val copy = Message.obtain(null, msg.what)
+        copy.data = data
+        return copy
     }
 }

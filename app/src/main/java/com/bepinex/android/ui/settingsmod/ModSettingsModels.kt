@@ -1,5 +1,6 @@
 package com.bepinex.android.ui.settingsmod
 
+import android.util.Log
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -108,7 +109,8 @@ object ModSettingsJson {
                 tabs = tabs,
                 controls = controls.sortedBy { it.order },
             )
-        } catch (_: Throwable) {
+        } catch (t: Throwable) {
+            Log.w("BugtopiaModSettingsClient", "parseSchema failed bytes=${json.length} ${t.message}")
             null
         }
     }

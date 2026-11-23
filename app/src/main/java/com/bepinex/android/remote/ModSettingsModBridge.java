@@ -15,12 +15,17 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * In-process mod side for {@link ModSettingsService} (both in {@code :game}).
- * Panel still binds to the service across processes. C# only polls/sends via String CallStatic.
+ * Panel still binds to the service across processes. C# polls with zero-arg CallStatic and
+ * sends replies through {@link #enqueueKv(String)} (raw JNI), which writes Bundle strings directly.
  */
 public final class ModSettingsModBridge {
     private static final String TAG = "BugtopiaModSettings";
 
     private static final ConcurrentLinkedQueue<String> incoming = new ConcurrentLinkedQueue<>();
+    /** Packed as whatStr + "\\u0001" + attachStr + "\\u0001" + bundleJson */
+    private static final ConcurrentLinkedQueue<String> outgoing = new ConcurrentLinkedQueue<>();
+    /** Packed as what + "\\u0001" + attach + "\\u0001" + reqId + "\\u0001" + key + "\\u0001" + value ... */
+    private static final ConcurrentLinkedQueue<String> outgoingKv = new ConcurrentLinkedQueue<>();
     private static Messenger replyMessenger;
     private static Messenger serviceMessenger;
     private static boolean attached;
@@ -64,30 +69,180 @@ public final class ModSettingsModBridge {
     }
 
     public static String pollIncomingJson() {
+        drainOutgoing();
+        drainOutgoingKv();
         String next = incoming.poll();
         return next != null ? next : "";
     }
 
+    /**
+     * IL2CPP-safe single-string enqueue. Packed:
+     * {@code whatStr + "\u0001" + attachStr + "\u0001" + bundleJson}
+     */
+    public static String enqueueOutgoing(String packed) {
+        if (packed == null || packed.isEmpty()) {
+            return "0";
+        }
+        outgoing.offer(packed);
+        int left = drainOutgoing();
+        if (serviceMessenger == null) {
+            Log.w(TAG, "enqueueOutgoing queued (serviceMessenger null) q=" + outgoing.size());
+            return "0";
+        }
+        if (left > 0) {
+            Log.w(TAG, "enqueueOutgoing partial drain left=" + left);
+            return "0";
+        }
+        return "1";
+    }
+
+    /**
+     * Direct Bundle reply. Packed fields, separated by U+0001 (not present in schema JSON):
+     * {@code what + "\u0001" + attach + "\u0001" + reqId + "\u0001" + key + "\u0001" + value ...}.
+     * Values are stored with {@link Bundle#putString}. {@code ok} is stored with
+     * {@link Bundle#putBoolean} when the value is {@code true} or {@code false}.
+     * Returns {@code "1"} only when the message was handed to the service Messenger.
+     */
+    public static String enqueueKv(String packed) {
+        if (packed == null || packed.isEmpty()) {
+            return "0";
+        }
+        outgoingKv.offer(packed);
+        int left = drainOutgoingKv();
+        if (left > 0) {
+            if (serviceMessenger == null) {
+                Log.w(TAG, "enqueueKv queued (serviceMessenger null) q=" + left);
+            } else {
+                Log.w(TAG, "enqueueKv partial drain left=" + left);
+            }
+            return "0";
+        }
+        return "1";
+    }
+
     public static String sendJson(String whatStr, String bundleJson, String attachReplyToStr) {
+        return enqueueOutgoing(whatStr + "\u0001" + attachReplyToStr + "\u0001" + (bundleJson != null ? bundleJson : "{}"));
+    }
+
+    /** @return remaining queued items (0 = fully drained) */
+    private static int drainOutgoing() {
         Messenger svc = serviceMessenger;
         if (svc == null) {
-            return "0";
+            return outgoing.size();
         }
-        try {
-            int what = Integer.parseInt(whatStr);
-            boolean attachReplyTo = "1".equals(attachReplyToStr);
-            ensureReplyMessenger();
-            Message msg = Message.obtain(null, what);
-            msg.setData(jsonToBundle(bundleJson));
-            if (attachReplyTo) {
-                msg.replyTo = replyMessenger;
+        ensureReplyMessenger();
+        String packed;
+        while ((packed = outgoing.poll()) != null) {
+            try {
+                int a = packed.indexOf('\u0001');
+                int b = a >= 0 ? packed.indexOf('\u0001', a + 1) : -1;
+                if (a < 0 || b < 0) {
+                    Log.w(TAG, "bad outgoing pack");
+                    continue;
+                }
+                String whatStr = packed.substring(0, a);
+                String attachStr = packed.substring(a + 1, b);
+                String bundleJson = packed.substring(b + 1);
+                int what = Integer.parseInt(whatStr);
+                Message msg = Message.obtain(null, what);
+                msg.setData(jsonToBundle(bundleJson));
+                if ("1".equals(attachStr)) {
+                    msg.replyTo = replyMessenger;
+                }
+                svc.send(msg);
+                Log.i(TAG, "drainOutgoing sent what=" + what + " bytes=" + bundleJson.length());
+            } catch (Throwable t) {
+                Log.w(TAG, "drainOutgoing failed", t);
+                // Re-queue failed pack at head so a later poll can retry.
+                ConcurrentLinkedQueue<String> rest = new ConcurrentLinkedQueue<>();
+                rest.offer(packed);
+                String n;
+                while ((n = outgoing.poll()) != null) {
+                    rest.offer(n);
+                }
+                outgoing.addAll(rest);
+                break;
             }
-            svc.send(msg);
-            return "1";
-        } catch (Throwable t) {
-            Log.w(TAG, "sendJson failed what=" + whatStr, t);
-            return "0";
         }
+        return outgoing.size();
+    }
+
+    /** @return remaining queued kv items (0 = fully drained) */
+    private static int drainOutgoingKv() {
+        Messenger svc = serviceMessenger;
+        if (svc == null) {
+            return outgoingKv.size();
+        }
+        ensureReplyMessenger();
+        String packed;
+        while ((packed = outgoingKv.poll()) != null) {
+            int what = -1;
+            try {
+                String[] parts = splitUnitSep(packed);
+                if (parts.length < 3 || ((parts.length - 3) & 1) != 0) {
+                    Log.w(TAG, "bad kv pack parts=" + parts.length);
+                    continue;
+                }
+                what = Integer.parseInt(parts[0]);
+                Bundle bundle = new Bundle();
+                if (!parts[2].isEmpty()) {
+                    bundle.putString(ModSettingsProtocol.KEY_REQ_ID, parts[2]);
+                }
+                int bytes = 0;
+                for (int i = 3; i + 1 < parts.length; i += 2) {
+                    String key = parts[i];
+                    String value = parts[i + 1] != null ? parts[i + 1] : "";
+                    if (key == null || key.isEmpty()) {
+                        continue;
+                    }
+                    bytes += value.length();
+                    if (ModSettingsProtocol.KEY_OK.equals(key)) {
+                        bundle.putBoolean(key, "true".equals(value));
+                    } else {
+                        bundle.putString(key, value);
+                    }
+                }
+                Message msg = Message.obtain(null, what);
+                msg.setData(bundle);
+                if ("1".equals(parts[1])) {
+                    msg.replyTo = replyMessenger;
+                }
+                svc.send(msg);
+                Log.i(TAG, "drainOutgoing sent what=" + what + " bytes=" + bytes);
+            } catch (Throwable t) {
+                Log.w(TAG, "drainOutgoing failed what=" + what, t);
+                ConcurrentLinkedQueue<String> rest = new ConcurrentLinkedQueue<>();
+                rest.offer(packed);
+                String next;
+                while ((next = outgoingKv.poll()) != null) {
+                    rest.offer(next);
+                }
+                outgoingKv.addAll(rest);
+                break;
+            }
+        }
+        return outgoingKv.size();
+    }
+
+    /** Split on U+0001 and keep empty fields, including a trailing empty value. */
+    private static String[] splitUnitSep(String packed) {
+        int count = 1;
+        for (int i = 0; i < packed.length(); i++) {
+            if (packed.charAt(i) == '\u0001') {
+                count++;
+            }
+        }
+        String[] parts = new String[count];
+        int index = 0;
+        int start = 0;
+        for (int i = 0; i < packed.length(); i++) {
+            if (packed.charAt(i) == '\u0001') {
+                parts[index++] = packed.substring(start, i);
+                start = i + 1;
+            }
+        }
+        parts[index] = packed.substring(start);
+        return parts;
     }
 
     private static void ensureServiceMessenger(Context context) {

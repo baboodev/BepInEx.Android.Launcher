@@ -131,10 +131,24 @@ class ModSettingsService : Service() {
     }
 
     private fun forward(target: Messenger?, msg: Message) {
-        if (target == null) return
+        if (target == null) {
+            Log.w(TAG, "forward dropped what=${msg.what}")
+            return
+        }
         try {
+            val fresh = android.os.Bundle()
+            msg.data?.let { src ->
+                src.keySet()
+                fresh.putAll(src)
+            }
             val copy = Message.obtain(null, msg.what)
-            copy.data = msg.data
+            copy.data = fresh
+            val schema = fresh.getString(ModSettingsProtocol.KEY_SCHEMA_JSON)
+            if (schema != null) {
+                Log.i(TAG, "forward what=${msg.what} schemaBytes=${schema.length}")
+            } else if (msg.what == ModSettingsProtocol.MSG_SCHEMA) {
+                Log.w(TAG, "forward what=${msg.what} schemaJson missing")
+            }
             target.send(copy)
         } catch (e: RemoteException) {
             Log.w(TAG, "forward failed what=${msg.what}", e)
