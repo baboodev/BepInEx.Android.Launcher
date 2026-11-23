@@ -185,6 +185,8 @@
     <string name="settings_floating_log_desc">在游戏左下角显示 BepInEx 日志悬浮按钮。默认关闭。</string>
     <string name="settings_pip_on_minimize">最小化时画中画</string>
     <string name="settings_pip_on_minimize_desc">离开游戏（Home / 手势）时以画中画小窗继续运行。默认关闭；下次启动生效。</string>
+    <string name="settings_rotate_to_mod_remote">旋转打开模组遥控</string>
+    <string name="settings_rotate_to_mod_remote_desc">竖屏时将游戏缩小为画中画并打开模组控制面板。默认关闭。</string>
     <string name="animation_restart_title">重启请求</string>
     <string name="animation_restart_message">重启后才可禁用动画，是否重启？</string>
     <string name="animation_restart_now">重启</string>

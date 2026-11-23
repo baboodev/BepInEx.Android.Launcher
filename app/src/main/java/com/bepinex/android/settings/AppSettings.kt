@@ -16,6 +16,7 @@ object AppSettings {
     private const val KEY_LANGUAGE = "language"
     private const val KEY_FLOATING_MOD_MENU = "floating_mod_menu"
     private const val KEY_PIP_ON_MINIMIZE = "pip_on_minimize"
+    private const val KEY_ROTATE_TO_MOD_REMOTE = "rotate_to_mod_remote"
     private const val KEY_ACTIVE_MODPACK_PREFIX = "active_modpack_"
     private const val KEY_USE_UNSTRIPPED_LIBUNITY = "use_unstripped_libunity"
     // B-specific: per-game overrides (kept alongside the global keys)
@@ -147,6 +148,15 @@ object AppSettings {
 
     fun setPipOnMinimizeEnabled(context: Context, enabled: Boolean) {
         prefs(context).edit().putBoolean(KEY_PIP_ON_MINIMIZE, enabled).commit()
+    }
+
+    // Rotate to portrait → PiP + mod remote panel. Off by default. commit() so :game sees it.
+
+    fun isRotateToModRemoteEnabled(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_ROTATE_TO_MOD_REMOTE, false)
+
+    fun setRotateToModRemoteEnabled(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean(KEY_ROTATE_TO_MOD_REMOTE, enabled).commit()
     }
 
     fun getActiveModpack(context: Context, packageName: String): String? =

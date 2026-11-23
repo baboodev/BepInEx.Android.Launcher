@@ -28,6 +28,7 @@ import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Animation
 import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.material.icons.outlined.PictureInPictureAlt
+import androidx.compose.material.icons.outlined.ScreenRotation
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -84,6 +85,9 @@ fun SettingsScreen(
     }
     var pipOnMinimize by remember {
         mutableStateOf(AppSettings.isPipOnMinimizeEnabled(context))
+    }
+    var rotateToModRemote by remember {
+        mutableStateOf(AppSettings.isRotateToModRemoteEnabled(context))
     }
 
     Scaffold(
@@ -200,6 +204,27 @@ fun SettingsScreen(
                             val next = !pipOnMinimize
                             pipOnMinimize = next
                             AppSettings.setPipOnMinimizeEnabled(context, next)
+                        }
+                    )
+                }
+                item {
+                    SettingListItem(
+                        title = stringResource(R.string.settings_rotate_to_mod_remote),
+                        summary = stringResource(R.string.settings_rotate_to_mod_remote_desc),
+                        icon = { Icon(Icons.Outlined.ScreenRotation, contentDescription = null) },
+                        trailing = {
+                            Switch(
+                                checked = rotateToModRemote,
+                                onCheckedChange = { checked ->
+                                    rotateToModRemote = checked
+                                    AppSettings.setRotateToModRemoteEnabled(context, checked)
+                                }
+                            )
+                        },
+                        onClick = {
+                            val next = !rotateToModRemote
+                            rotateToModRemote = next
+                            AppSettings.setRotateToModRemoteEnabled(context, next)
                         }
                     )
                 }
