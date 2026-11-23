@@ -202,6 +202,9 @@
     <string name="settings_pip_on_minimize_desc">When you leave the game (Home / gesture), keep it running in a floating PiP window. Off by default; applies on the next launch.</string>
     <string name="settings_rotate_to_mod_remote">Rotate to mod remote</string>
     <string name="settings_rotate_to_mod_remote_desc">In portrait, shrink the game to PiP and open a mod control panel. Off by default.</string>
+    <string name="mod_settings_title">Mod settings</string>
+    <string name="mod_settings_disconnected">Mod not connected</string>
+    <string name="mod_settings_file_fallback">Using file fallback</string>
     <string name="animation_restart_title">Restart Required</string>
     <string name="animation_restart_message">Animations will be disabled after restarting the app. Restart now?</string>
     <string name="animation_restart_now">Restart</string>

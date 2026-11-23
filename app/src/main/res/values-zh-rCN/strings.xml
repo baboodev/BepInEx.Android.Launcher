@@ -187,6 +187,9 @@
     <string name="settings_pip_on_minimize_desc">离开游戏（Home / 手势）时以画中画小窗继续运行。默认关闭；下次启动生效。</string>
     <string name="settings_rotate_to_mod_remote">旋转打开模组遥控</string>
     <string name="settings_rotate_to_mod_remote_desc">竖屏时将游戏缩小为画中画并打开模组控制面板。默认关闭。</string>
+    <string name="mod_settings_title">模组设置</string>
+    <string name="mod_settings_disconnected">模组未连接</string>
+    <string name="mod_settings_file_fallback">使用文件回退</string>
     <string name="animation_restart_title">重启请求</string>
     <string name="animation_restart_message">重启后才可禁用动画，是否重启？</string>
     <string name="animation_restart_now">重启</string>

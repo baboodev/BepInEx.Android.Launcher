@@ -199,6 +199,9 @@
     <string name="settings_pip_on_minimize_desc">離開遊戲（Home / 手勢）時以子母畫面小窗繼續執行。預設關閉；下次啟動生效。</string>
     <string name="settings_rotate_to_mod_remote">旋轉開啟模組遙控</string>
     <string name="settings_rotate_to_mod_remote_desc">直向時將遊戲縮小為子母畫面並開啟模組控制面板。預設關閉。</string>
+    <string name="mod_settings_title">模組設定</string>
+    <string name="mod_settings_disconnected">模組未連線</string>
+    <string name="mod_settings_file_fallback">使用檔案回退</string>
     <string name="animation_restart_title">需要重新啟動</string>
     <string name="animation_restart_message">重新啟動後才會關閉動畫，是否立即重新啟動？</string>
     <string name="animation_restart_now">重新啟動</string>
