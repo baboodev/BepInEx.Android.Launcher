@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,15 +15,18 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationRail
-import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
@@ -43,6 +45,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
+private sealed class NavPage {
+    data object Categories : NavPage()
+    data class Subs(val tab: SchemaTab) : NavPage()
+    data class Controls(val tab: SchemaTab, val sub: SchemaSub?) : NavPage()
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SchemaSettingsUi(
@@ -51,82 +59,172 @@ fun SchemaSettingsUi(
     viewModel: ModSettingsViewModel,
     modifier: Modifier = Modifier,
 ) {
-    var selectedTabId by remember(schema) {
-        mutableStateOf(schema.tabs.firstOrNull()?.id.orEmpty())
-    }
-    val selectedTab = schema.tabs.firstOrNull { it.id == selectedTabId } ?: schema.tabs.firstOrNull()
-    var selectedSubId by remember(selectedTabId) {
-        mutableStateOf(selectedTab?.subs?.firstOrNull()?.id)
-    }
+    var page by remember(schema) { mutableStateOf<NavPage>(NavPage.Categories) }
 
-    Row(modifier = modifier.fillMaxSize()) {
-        NavigationRail(
-            modifier = Modifier.fillMaxHeight()
-        ) {
-            schema.tabs.forEach { tab ->
-                NavigationRailItem(
-                    selected = tab.id == selectedTabId,
-                    onClick = {
-                        selectedTabId = tab.id
-                        selectedSubId = tab.subs.firstOrNull()?.id
-                    },
-                    icon = { Text(tab.label.take(1), style = MaterialTheme.typography.labelSmall) },
-                    label = {
-                        Text(
-                            tab.label,
-                            style = MaterialTheme.typography.labelSmall,
-                            maxLines = 2,
+    Column(modifier = modifier.fillMaxSize()) {
+        when (val current = page) {
+            is NavPage.Categories -> {
+                NavList(
+                    title = null,
+                    onBack = null,
+                    items = schema.tabs.map { tab ->
+                        NavItem(
+                            id = tab.id,
+                            label = tab.label,
+                            showChevron = true,
+                            onClick = {
+                                page = if (tab.subs.isNotEmpty()) {
+                                    NavPage.Subs(tab)
+                                } else {
+                                    NavPage.Controls(tab, sub = null)
+                                }
+                            },
                         )
-                    }
+                    },
+                )
+            }
+            is NavPage.Subs -> {
+                NavList(
+                    title = current.tab.label,
+                    onBack = { page = NavPage.Categories },
+                    items = current.tab.subs.map { sub ->
+                        NavItem(
+                            id = sub.id,
+                            label = sub.label,
+                            showChevron = true,
+                            onClick = {
+                                page = NavPage.Controls(current.tab, sub)
+                            },
+                        )
+                    },
+                )
+            }
+            is NavPage.Controls -> {
+                val title = when {
+                    current.sub != null -> "${current.tab.label} / ${current.sub.label}"
+                    else -> current.tab.label
+                }
+                ControlsPage(
+                    title = title,
+                    onBack = {
+                        page = if (current.tab.subs.isNotEmpty()) {
+                            NavPage.Subs(current.tab)
+                        } else {
+                            NavPage.Categories
+                        }
+                    },
+                    rows = schema.controls
+                        .filter { it.tab == current.tab.id }
+                        .filter {
+                            current.sub == null || it.sub == null || it.sub == current.sub.id
+                        }
+                        .sortedBy { it.order },
+                    values = values,
+                    viewModel = viewModel,
                 )
             }
         }
+    }
+}
 
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-                .padding(horizontal = 12.dp)
+private data class NavItem(
+    val id: String,
+    val label: String,
+    val showChevron: Boolean,
+    val onClick: () -> Unit,
+)
+
+@Composable
+private fun NavList(
+    title: String?,
+    onBack: (() -> Unit)?,
+    items: List<NavItem>,
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        if (title != null || onBack != null) {
+            NavHeader(title = title.orEmpty(), onBack = onBack)
+            HorizontalDivider()
+        }
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(vertical = 4.dp),
         ) {
-            val subs = selectedTab?.subs.orEmpty()
-            if (subs.isNotEmpty()) {
+            items(items, key = { it.id }) { item ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .horizontalScrollChips(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        .clickable(onClick = item.onClick)
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    subs.forEach { sub ->
-                        FilterChip(
-                            selected = sub.id == selectedSubId,
-                            onClick = { selectedSubId = sub.id },
-                            label = { Text(sub.label) }
+                    Text(
+                        text = item.label,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.weight(1f),
+                    )
+                    if (item.showChevron) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-
-            val rows = schema.controls
-                .filter { it.tab == selectedTabId }
-                .filter { selectedSubId == null || it.sub == null || it.sub == selectedSubId }
-                .sortedBy { it.order }
-
-            LazyColumn(
-                contentPadding = PaddingValues(bottom = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                items(rows, key = { it.key }) { control ->
-                    ControlRow(control, values[control.key], viewModel)
-                }
+                HorizontalDivider()
             }
         }
     }
 }
 
 @Composable
-private fun Modifier.horizontalScrollChips(): Modifier = this // chips wrap via Row; ok on portrait
+private fun NavHeader(title: String, onBack: (() -> Unit)?) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 4.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (onBack != null) {
+            IconButton(onClick = onBack) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                )
+            }
+        } else {
+            Spacer(modifier = Modifier.width(12.dp))
+        }
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun ControlsPage(
+    title: String,
+    onBack: () -> Unit,
+    rows: List<SchemaControl>,
+    values: Map<String, ValueEntry>,
+    viewModel: ModSettingsViewModel,
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        NavHeader(title = title, onBack = onBack)
+        HorizontalDivider()
+        LazyColumn(
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            items(rows, key = { it.key }) { control ->
+                ControlRow(control, values[control.key], viewModel)
+            }
+        }
+    }
+}
 
 @Composable
 private fun ControlRow(
