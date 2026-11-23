@@ -15,6 +15,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
+import android.view.View
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -91,9 +92,22 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Required by SplashScreen: switches Manifest splash theme → postSplashScreenTheme.
-        // Do not keep the splash with setKeepOnScreenCondition — that blocked the UI (ANR).
-        installSplashScreen()
+        // Manifest Theme.SplashScreen → postSplashScreenTheme. Android 12+ only allows a
+        // solid color + circularly-masked icon on the system splash, so the full artwork
+        // is shown on the exit splash view (and as windowBackground until Compose draws).
+        // Never use setKeepOnScreenCondition here — it caused ANR.
+        installSplashScreen().setOnExitAnimationListener { provider ->
+            provider.iconView.visibility = View.GONE
+            provider.view.setBackgroundResource(R.drawable.bg_splash)
+            provider.view.alpha = 1f
+            provider.view.postDelayed({
+                provider.view.animate()
+                    .setDuration(220L)
+                    .alpha(0f)
+                    .withEndAction { provider.remove() }
+                    .start()
+            }, 700L)
+        }
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 

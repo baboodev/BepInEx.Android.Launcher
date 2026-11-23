@@ -1,23 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!--
-      Cold-start splash (Android 12+ SplashScreen API + compat).
-      Manifest applies this to MainActivity. Background must be a solid color;
-      artwork is the centered splash icon. See:
+      Android 12+ SplashScreen API only allows a solid color for the system
+      splash background; the animated icon is always circularly masked.
+      So: system splash = black + empty icon (no circle of art), then
+      postSplashScreenTheme paints the full artwork as windowBackground
+      until Compose draws. Manifest theme on MainActivity.
       https://developer.android.com/develop/ui/views/launch/splash-screen
     -->
     <style name="Theme.BepInEx.Launcher.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@android:color/black</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon_empty</item>
         <item name="windowSplashScreenAnimationDuration">0</item>
         <item name="postSplashScreenTheme">@style/Theme.BepInEx.Launcher</item>
-        <!-- Pre-API 31 starting window (compat). -->
+        <!-- API &lt; 31 compat: starting window shows the full art immediately. -->
         <item name="android:windowBackground">@drawable/bg_splash</item>
     </style>
 
-    <!-- Applied by installSplashScreen() via postSplashScreenTheme. -->
+    <!-- Applied by installSplashScreen(); full-bleed art until setContent. -->
     <style name="Theme.BepInEx.Launcher" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:windowBackground">@drawable/bg_splash</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
