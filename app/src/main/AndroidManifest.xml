@@ -128,6 +128,16 @@
             android:taskAffinity="com.bepinex.android.modremote"
             android:configChanges="keyboard|keyboardHidden|screenSize" />
 
+        <!-- Same-uid Messenger router between ModRemoteActivity and :game mod. -->
+        <service
+            android:name="com.bepinex.android.remote.ModSettingsService"
+            android:exported="false"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="com.bepinex.android.action.MOD_SETTINGS" />
+            </intent-filter>
+        </service>
+
         <!-- In-process login-xdsdk WebView (intercepts bugtopia:// redirect).
              Must be :game — same process as GoogleSignImpl pending callback. -->
         <activity
