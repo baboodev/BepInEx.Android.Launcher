@@ -3,9 +3,10 @@
     <!--
       Android 12+ SplashScreen API only allows a solid color for the system
       splash background; the animated icon is always circularly masked.
-      So: system splash = black + empty icon (no circle of art), then
-      postSplashScreenTheme paints the full artwork as windowBackground
-      until Compose draws. Manifest theme on MainActivity.
+      System splash stays black with an empty icon (no circle of art) and is
+      removed on the first content frame. That frame is the full artwork
+      (bg_splash); windowBackground is the same drawable for the gap before
+      Compose draws. Manifest theme on MainActivity.
       https://developer.android.com/develop/ui/views/launch/splash-screen
     -->
     <style name="Theme.BepInEx.Launcher.Splash" parent="Theme.SplashScreen">

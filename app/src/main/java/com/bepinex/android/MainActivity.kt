@@ -4,22 +4,31 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.app.ActivityManager
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.os.LocaleList
+import android.os.SystemClock
 import android.provider.Settings
+import android.view.Choreographer
+import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
-import android.view.View
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.view.doOnPreDraw
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import com.bepinex.android.update.AnnouncementDialog
@@ -80,7 +89,15 @@ class MainActivity : ComponentActivity() {
     companion object {
         /** Saved across activity recreations (e.g. language switch) */
         private var savedPackageName: String? = null
+
+        /** Crash snapshot + splash gate run once per process, not on recreate. */
+        private var coldStartCommitted = false
     }
+
+    private var launcherUiStarted = false
+    private var splashContentAtElapsed = 0L
+    private var splashRoot: FrameLayout? = null
+    private var splashArt: ImageView? = null
 
     override fun attachBaseContext(newBase: Context?) {
         val ctx = newBase ?: return super.attachBaseContext(newBase)
@@ -92,28 +109,82 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Manifest Theme.SplashScreen → postSplashScreenTheme. Android 12+ only allows a
-        // solid color + circularly-masked icon on the system splash, so the full artwork
-        // is shown on the exit splash view (and as windowBackground until Compose draws).
-        // Never use setKeepOnScreenCondition here — it caused ANR.
+        // Android 12+ system splash is a solid color plus a circular icon, so the
+        // manifest theme is black with an empty icon. Remove that overlay as soon
+        // as the first content frame exists. Never setKeepOnScreenCondition —
+        // holding the system splash over main-thread work ANRs.
         installSplashScreen().setOnExitAnimationListener { provider ->
-            provider.iconView.visibility = View.GONE
-            provider.view.setBackgroundResource(R.drawable.bg_splash)
-            provider.view.alpha = 1f
-            provider.view.postDelayed({
-                provider.view.animate()
-                    .setDuration(220L)
-                    .alpha(0f)
-                    .withEndAction { provider.remove() }
-                    .start()
-            }, 700L)
+            provider.remove()
         }
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // A native crash cannot execute a finally block; archive the previous
-        // run before initializing and appending to the current launcher log.
-        DebugCrashCollector.collect(this)
+        if (coldStartCommitted) {
+            continueLauncherStartup()
+            return
+        }
+        coldStartCommitted = true
+
+        // Full-bleed artwork is the first content. A layer-list window background
+        // stays under the system splash on API 31+, so this ImageView is what
+        // actually paints. It stays above Compose until that UI has drawn.
+        val root = FrameLayout(this).apply {
+            setBackgroundColor(Color.BLACK)
+        }
+        val art = ImageView(this).apply {
+            setBackgroundColor(Color.BLACK)
+            setImageResource(R.drawable.bg_splash_art)
+            scaleType = ImageView.ScaleType.FIT_CENTER
+        }
+        root.addView(
+            art,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+        splashRoot = root
+        splashArt = art
+        setContentView(root)
+        window.setBackgroundDrawableResource(R.drawable.bg_splash)
+        splashContentAtElapsed = SystemClock.elapsedRealtime()
+        // Two frame callbacks: the art is drawn, then presented, then startup runs.
+        // Startup's Compose composition blocks the main thread; the presented art
+        // stays on screen for that whole stretch.
+        art.doOnPreDraw {
+            val choreographer = Choreographer.getInstance()
+            choreographer.postFrameCallback {
+                choreographer.postFrameCallback {
+                    startLauncherAfterSplashFrame()
+                }
+            }
+        }
+    }
+
+    private fun startLauncherAfterSplashFrame() {
+        if (launcherUiStarted || isDestroyed) return
+        launcherUiStarted = true
+        val appContext = applicationContext
+        scope.launch {
+            // Park is a same-directory rename. The dumpsys snapshot must not run
+            // on the main thread — it was the multi-second black screen.
+            withContext(Dispatchers.IO) {
+                DebugCrashCollector.parkPreviousSessionFiles(appContext)
+            }
+            Thread({
+                DebugCrashCollector.collect(appContext)
+            }, "debug-crash-collector").apply {
+                isDaemon = true
+                start()
+            }
+            if (isDestroyed) return@launch
+            continueLauncherStartup()
+        }
+    }
+
+    private fun continueLauncherStartup() {
+        if (isDestroyed) return
+        launcherUiStarted = true
 
         // Initialize settings first (before any Compose rendering)
         AppSettings.initialize(this)
@@ -933,8 +1004,48 @@ class MainActivity : ComponentActivity() {
     // UI render
 
     private fun setupContent() {
-        setContent {
-            BepInExTheme(themeMode = themeMode, dynamicColor = dynamicColor) {
+        val root = splashRoot
+        val art = splashArt
+        if (root != null && art != null) {
+            val composeView = ComposeView(this).apply {
+                setViewCompositionStrategy(
+                    ViewCompositionStrategy.DisposeOnLifecycleDestroyed(this@MainActivity)
+                )
+                setContent { LauncherContent() }
+            }
+            root.addView(
+                composeView,
+                0,
+                FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT
+                )
+            )
+            return
+        }
+        setContent { LauncherContent() }
+    }
+
+    @Composable
+    private fun LauncherContent() {
+        // Drop the cold-start artwork only after this UI has been composed,
+        // so the bitmap stays up through the first Compose frame.
+        LaunchedEffect(Unit) {
+            val root = splashRoot
+            val art = splashArt
+            if (root != null && art != null) {
+                art.post {
+                    if (art.parent === root) root.removeView(art)
+                    splashArt = null
+                    splashRoot = null
+                    if (splashContentAtElapsed != 0L) {
+                        val held = SystemClock.elapsedRealtime() - splashContentAtElapsed
+                        BepInExLog.i("Splash artwork held ${held}ms until launcher UI drew")
+                    }
+                }
+            }
+        }
+        BepInExTheme(themeMode = themeMode, dynamicColor = dynamicColor) {
                 BepInExNavHost(
                     scope = scope,
                     detectedGames = detectedGames,
@@ -1021,6 +1132,5 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             }
-        }
     }
 }
