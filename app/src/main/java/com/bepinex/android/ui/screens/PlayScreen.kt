@@ -346,6 +346,44 @@ private fun StatusCard(
 }
 
 @Composable
+fun PlayModSection(
+    version: String?,
+    fileName: String?,
+    isBusy: Boolean,
+    onPickFile: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                text = stringResource(R.string.play_mod_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = stringResource(R.string.play_mod_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            val status = when {
+                !version.isNullOrBlank() -> stringResource(R.string.play_mod_version, version)
+                !fileName.isNullOrBlank() -> fileName
+                else -> stringResource(R.string.play_mod_none)
+            }
+            Text(text = status, fontWeight = FontWeight.Medium)
+            if (isBusy) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            }
+            Button(onClick = onPickFile, enabled = !isBusy) {
+                Text(stringResource(R.string.play_mod_pick))
+            }
+        }
+    }
+}
+
+@Composable
 private fun ReadinessCard(
     report: HeartopiaReadiness.Report?,
     busy: String?,

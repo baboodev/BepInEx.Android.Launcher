@@ -74,11 +74,10 @@ import com.bepinex.android.BepInExPaths
 import com.bepinex.android.GameDetector
 import com.bepinex.android.R
 import com.bepinex.android.log.BepInExLogReader
+import com.bepinex.android.modpack.ModAssemblyVersion
 import com.bepinex.android.modpack.ModpackExportProgress
 import com.bepinex.android.modpack.ModpackManager
-import com.bepinex.android.modpack.ModpackMeta
 import com.bepinex.android.settings.AppSettings
-import com.bepinex.android.shortcut.ModpackShortcutHelper
 import com.bepinex.android.ui.screens.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -143,6 +142,17 @@ private data class VersionMismatchPrompt(
     val onContinue: () -> Unit
 )
 
+private const val PLAY_MODPACK_NAME = "Bugtopia"
+
+private fun contentDisplayName(context: android.content.Context, uri: android.net.Uri): String? =
+    runCatching {
+        context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+            if (!cursor.moveToFirst()) return@use null
+            val nameColumn = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+            nameColumn.takeIf { it >= 0 }?.let(cursor::getString)
+        }
+    }.getOrNull()
+
 /**
  * Root navigation host: MAIN pager (Play / Settings / About / Logs) plus detail routes.
  */
@@ -184,20 +194,27 @@ fun BepInExNavHost(
     val context = LocalContext.current
     val composeScope = rememberCoroutineScope()
 
-    // State for modpack list
-    var modpacks by remember { mutableStateOf<List<ModpackMeta>>(emptyList()) }
+    // State for the active modpack. Play only picks a file; detail routes still use this.
     var activeModpackName by remember { mutableStateOf<String?>(null) }
     var modpackRefreshKey by remember { mutableStateOf(0) }
-    var modpackIconRefreshKey by remember { mutableStateOf(0) }
     var exportProgress by remember { mutableStateOf<ModpackExportProgress?>(null) }
     var exportJob by remember { mutableStateOf<Job?>(null) }
     var importJob by remember { mutableStateOf<Job?>(null) }
     var appliedModpackName by remember { mutableStateOf<String?>(null) }
     var isSwitchingModpack by remember { mutableStateOf(false) }
     var modpackSwitchJob by remember { mutableStateOf<Job?>(null) }
+    var forceModpackReapply by remember { mutableStateOf(false) }
+    var playModVersion by remember { mutableStateOf<String?>(null) }
+    var playModFileName by remember { mutableStateOf<String?>(null) }
 
-    fun enqueueModpackSwitch(packageName: String, target: String?) {
-        if (target == activeModpackName && appliedModpackName == target && !isSwitchingModpack) return
+    fun enqueueModpackSwitch(packageName: String, target: String?, force: Boolean = false) {
+        if (force) forceModpackReapply = true
+        val idleSame = !force &&
+            target == activeModpackName &&
+            appliedModpackName == target &&
+            modpackSwitchJob?.isActive != true &&
+            !forceModpackReapply
+        if (idleSame) return
         activeModpackName = target
         isSwitchingModpack = true
         if (modpackSwitchJob?.isActive == true) return
@@ -206,7 +223,9 @@ fun BepInExNavHost(
                 while (isActive) {
                     val targetName = activeModpackName
                     val from = appliedModpackName
-                    if (targetName == from) break
+                    val reapply = forceModpackReapply
+                    forceModpackReapply = false
+                    if (targetName == from && !reapply) break
                     val ok = withContext(Dispatchers.IO) {
                         modpackManager.switchRuntime(packageName, from, targetName)
                     }
@@ -226,6 +245,14 @@ fun BepInExNavHost(
             } finally {
                 isSwitchingModpack = false
             }
+        }
+    }
+
+    fun activateInstalledModpack(packageName: String, target: String) {
+        composeScope.launch {
+            modpackSwitchJob?.join()
+            enqueueModpackSwitch(packageName, target, force = true)
+            modpackRefreshKey++
         }
     }
 
@@ -284,7 +311,6 @@ fun BepInExNavHost(
             val loadedModpacks = withContext(Dispatchers.IO) {
                 modpackManager.listModpacks(game.packageName)
             }
-            modpacks = loadedModpacks
             val savedActiveName = AppSettings.getActiveModpack(context, game.packageName)
             val validActiveName = savedActiveName?.takeIf { savedName ->
                 loadedModpacks.any { it.name == savedName }
@@ -299,61 +325,140 @@ fun BepInExNavHost(
         }
     }
 
+    LaunchedEffect(selectedGame?.packageName, activeModpackName, modpackRefreshKey) {
+        val packageName = selectedGame?.packageName ?: XdGoogleWebAuth.HEARTOPIA_PACKAGE
+        val pack = activeModpackName
+        if (pack.isNullOrBlank()) {
+            playModVersion = null
+            playModFileName = null
+            return@LaunchedEffect
+        }
+        val label = withContext(Dispatchers.IO) {
+            ModAssemblyVersion.read(modpackManager, packageName, pack)
+        }
+        playModVersion = label.version
+        playModFileName = label.fileName
+    }
+
     // File picker triggers (launcher must be at composable top level)
-    var importModpackTrigger by remember { mutableStateOf(false) }
     var addModTrigger by remember { mutableStateOf<String?>(null) }
     var versionMismatchPrompt by remember { mutableStateOf<VersionMismatchPrompt?>(null) }
 
-    // Import modpack file picker — inline import to avoid navigation reset
-    val importModpackLauncher = rememberLauncherForActivityResult(
+    val pickModLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
-        val game = selectedGame
-        if (uri != null && game != null && importJob?.isActive != true) {
-            val displayName = runCatching {
-                context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-                    if (cursor.moveToFirst()) {
-                        val nameColumn = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
-                        nameColumn.takeIf { it >= 0 }?.let(cursor::getString)
-                    } else {
-                        null
+        if (uri == null || importJob?.isActive == true) return@rememberLauncherForActivityResult
+        val packageName = selectedGame?.packageName ?: XdGoogleWebAuth.HEARTOPIA_PACKAGE
+        val gameVersion = selectedGame?.versionName.orEmpty()
+        val displayName = contentDisplayName(context, uri)
+        when {
+            ModpackManager.isModpackFileName(displayName) -> {
+                fun runImport() {
+                    if (importJob?.isActive == true) return
+                    importJob = composeScope.launch(Dispatchers.IO) {
+                        try {
+                            val imported = modpackManager.importModpack(
+                                packageName,
+                                uri,
+                                context,
+                                displayName
+                            )
+                            withContext(Dispatchers.Main) {
+                                if (imported != null) {
+                                    android.widget.Toast.makeText(
+                                        context,
+                                        context.getString(R.string.play_mod_installed, imported.name),
+                                        android.widget.Toast.LENGTH_SHORT
+                                    ).show()
+                                    activateInstalledModpack(packageName, imported.name)
+                                } else {
+                                    android.widget.Toast.makeText(
+                                        context,
+                                        context.getString(R.string.modpack_invalid_archive),
+                                        android.widget.Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+                        } catch (_: CancellationException) {
+                        } catch (error: Exception) {
+                            com.bepinex.android.BepInExLog.e("Import failed", error)
+                            withContext(Dispatchers.Main) {
+                                android.widget.Toast.makeText(
+                                    context,
+                                    context.getString(R.string.import_failed),
+                                    android.widget.Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        } finally {
+                            withContext(NonCancellable + Dispatchers.Main) {
+                                importJob = null
+                            }
+                        }
                     }
                 }
-            }.getOrNull()
-            if (!ModpackManager.isModpackFileName(displayName)) {
-                android.widget.Toast.makeText(
-                    context,
-                    context.getString(R.string.modpack_invalid_file),
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
-                return@rememberLauncherForActivityResult
+                val game = selectedGame
+                if (game == null) {
+                    runImport()
+                } else {
+                    composeScope.launch(Dispatchers.IO) {
+                        val peeked = modpackManager.peekModpackInfo(context, uri, displayName)
+                        withContext(Dispatchers.Main) {
+                            if (peeked != null &&
+                                !ModpackManager.isGameVersionCompatible(peeked.gameVersion, game.versionName)
+                            ) {
+                                versionMismatchPrompt = VersionMismatchPrompt(
+                                    message = context.getString(
+                                        R.string.modpack_game_version_mismatch_message,
+                                        peeked.gameVersion,
+                                        game.versionName
+                                    ),
+                                    onContinue = { runImport() }
+                                )
+                            } else {
+                                runImport()
+                            }
+                        }
+                    }
+                }
             }
-            fun runImport() {
-                if (importJob?.isActive == true) return
+            ModpackManager.isModFileName(displayName) -> {
+                val preferredPack = activeModpackName
                 importJob = composeScope.launch(Dispatchers.IO) {
                     try {
-                        val imported = modpackManager.importModpack(
-                            game.packageName,
-                            uri,
-                            context,
-                            displayName
-                        )
+                        val packs = modpackManager.listModpacks(packageName)
+                        val pack = preferredPack?.takeIf { name -> packs.any { it.name == name } }
+                            ?: packs.firstOrNull { it.name.equals(PLAY_MODPACK_NAME, ignoreCase = true) }?.name
+                            ?: modpackManager.createModpack(packageName, PLAY_MODPACK_NAME, gameVersion)?.name
+                        val added = if (pack == null) {
+                            null
+                        } else {
+                            modpackManager.addModFromUri(context, packageName, pack, uri)
+                        }
                         withContext(Dispatchers.Main) {
-                            if (imported != null) {
-                                modpackRefreshKey++
+                            if (added != null && pack != null) {
+                                android.widget.Toast.makeText(
+                                    context,
+                                    context.getString(R.string.play_mod_installed, added.name),
+                                    android.widget.Toast.LENGTH_SHORT
+                                ).show()
+                                activateInstalledModpack(packageName, pack)
                             } else {
                                 android.widget.Toast.makeText(
                                     context,
-                                    context.getString(R.string.modpack_invalid_archive),
+                                    context.getString(R.string.import_failed),
                                     android.widget.Toast.LENGTH_SHORT
                                 ).show()
                             }
                         }
                     } catch (_: CancellationException) {
                     } catch (error: Exception) {
-                        com.bepinex.android.BepInExLog.e("Import failed", error)
+                        com.bepinex.android.BepInExLog.e("Mod install failed", error)
                         withContext(Dispatchers.Main) {
-                            android.widget.Toast.makeText(context, context.getString(R.string.import_failed), android.widget.Toast.LENGTH_SHORT).show()
+                            android.widget.Toast.makeText(
+                                context,
+                                context.getString(R.string.import_failed),
+                                android.widget.Toast.LENGTH_SHORT
+                            ).show()
                         }
                     } finally {
                         withContext(NonCancellable + Dispatchers.Main) {
@@ -362,24 +467,12 @@ fun BepInExNavHost(
                     }
                 }
             }
-            composeScope.launch(Dispatchers.IO) {
-                val peeked = modpackManager.peekModpackInfo(context, uri, displayName)
-                withContext(Dispatchers.Main) {
-                    if (peeked != null &&
-                        !ModpackManager.isGameVersionCompatible(peeked.gameVersion, game.versionName)
-                    ) {
-                        versionMismatchPrompt = VersionMismatchPrompt(
-                            message = context.getString(
-                                R.string.modpack_game_version_mismatch_message,
-                                peeked.gameVersion,
-                                game.versionName
-                            ),
-                            onContinue = { runImport() }
-                        )
-                    } else {
-                        runImport()
-                    }
-                }
+            else -> {
+                android.widget.Toast.makeText(
+                    context,
+                    context.getString(R.string.play_mod_invalid_file),
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
@@ -442,13 +535,6 @@ fun BepInExNavHost(
             }
         }
         addModTrigger = null
-    }
-
-    LaunchedEffect(importModpackTrigger) {
-        if (importModpackTrigger) {
-            importModpackLauncher.launch(arrayOf("application/zip", ModpackManager.MODPACK_MIME_TYPE))
-            importModpackTrigger = false
-        }
     }
 
     LaunchedEffect(addModTrigger) {
@@ -575,142 +661,14 @@ fun BepInExNavHost(
                                 onExportLogs = onExportLogs,
                                 onShowAnnouncement = onShowAnnouncement,
                                 modpackSection = {
-                                val packageName = selectedGame?.packageName
-                                    ?: XdGoogleWebAuth.HEARTOPIA_PACKAGE
-
-                                ModpackListScreen(
-                                    packageName = packageName,
-                                    targetGameLabel = selectedGame?.label ?: packageName,
-                                    gameVersion = selectedGame?.versionName.orEmpty(),
-                                    modpacks = modpacks,
-                                    activeModpackName = activeModpackName,
-                                    isSwitching = isSwitchingModpack,
-                                    iconRefreshKey = modpackIconRefreshKey,
-                                    onCreateModpack = { name, createShortcut, iconBitmap, gameVersion ->
-                                        val created = modpackManager.createModpack(
-                                            packageName,
-                                            name,
-                                            gameVersion
-                                        )
-                                        if (created != null) {
-                                            modpackManager.updateMeta(packageName, created.name, createShortcut)
-                                            if (iconBitmap != null) {
-                                                modpackManager.saveModpackIcon(packageName, created.name, iconBitmap, "png")
-                                            }
-                                            if (createShortcut) {
-                                                ModpackShortcutHelper.createShortcut(context, packageName, created.name, created.name)
-                                            }
+                                    PlayModSection(
+                                        version = playModVersion,
+                                        fileName = playModFileName,
+                                        isBusy = isSwitchingModpack || importJob?.isActive == true,
+                                        onPickFile = {
+                                            pickModLauncher.launch(arrayOf("*/*"))
                                         }
-                                        modpackRefreshKey++
-                                    },
-                                    onDeleteModpack = { name ->
-                                        composeScope.launch {
-                                            modpackSwitchJob?.join()
-                                            val wasActive = activeModpackName == name || appliedModpackName == name
-                                            val deleted = withContext(Dispatchers.IO) {
-                                                if (wasActive) {
-                                                    modpackManager.switchRuntime(packageName, name, null)
-                                                }
-                                                modpackManager.deleteModpack(packageName, name)
-                                            }
-                                            if (deleted) {
-                                                modpacks = modpacks.filterNot { it.name == name }
-                                                if (wasActive) {
-                                                    AppSettings.setActiveModpack(context, packageName, null)
-                                                    activeModpackName = null
-                                                    appliedModpackName = null
-                                                }
-                                                modpackRefreshKey++
-                                            }
-                                        }
-                                    },
-                                    onEditModpack = { oldName, newName, createShortcut, iconBitmap, gameVersion ->
-                                        val existingShortcut = modpackManager.listModpacks(packageName)
-                                            .firstOrNull { it.name == oldName }
-                                            ?.createShortcut == true
-                                        val normalizedName = modpackManager.normalizeModpackName(newName)
-                                        val success = modpackManager.renameModpack(packageName, oldName, newName)
-                                        if (success) {
-                                            val shortcutShouldExist = createShortcut || existingShortcut
-                                            if (activeModpackName == oldName) {
-                                                activeModpackName = normalizedName
-                                                AppSettings.setActiveModpack(context, packageName, normalizedName)
-                                            }
-                                            modpackManager.updateMeta(
-                                                packageName,
-                                                normalizedName,
-                                                shortcutShouldExist,
-                                                gameVersion
-                                            )
-                                            if (createShortcut || (existingShortcut && oldName != normalizedName)) {
-                                                if (oldName != normalizedName) {
-                                                    ModpackShortcutHelper.removeShortcut(context, packageName, oldName)
-                                                }
-                                                ModpackShortcutHelper.createShortcut(context, packageName, normalizedName, newName)
-                                            }
-                                            if (iconBitmap != null) {
-                                                val ext = when {
-                                                    iconBitmap.config == android.graphics.Bitmap.Config.RGB_565 -> "jpg"
-                                                    else -> "png"
-                                                }
-                                                modpackManager.saveModpackIcon(packageName, normalizedName, iconBitmap, ext)
-                                            }
-                                            modpacks = modpackManager.listModpacks(packageName)
-                                            modpackRefreshKey++
-                                            modpackIconRefreshKey++
-                                        }
-                                        success
-                                    },
-                                    onSelectModpack = { name ->
-                                        enqueueModpackSwitch(packageName, name)
-                                    },
-                                    onOpenModpack = { name ->
-                                        navController.navigate(NavRoutes.modpackDetail(packageName, name))
-                                    },
-                                    onExportModpack = { name ->
-                                        startModpackExport(packageName, name)
-                                    },
-                                    onImportModpack = { importModpackTrigger = true },
-                                    onRefresh = {
-                                        modpackRefreshKey++
-                                        modpackIconRefreshKey++
-                                    },
-                                    embedded = true,
-                                    onImportDownloadFiles = { files ->
-                                        composeScope.launch(Dispatchers.IO) {
-                                            var imported = 0
-                                            try {
-                                                files.forEach { file ->
-                                                    if (modpackManager.importModpack(packageName, file) != null) {
-                                                        imported++
-                                                    }
-                                                }
-                                                withContext(Dispatchers.Main) {
-                                                    modpackRefreshKey++
-                                                    android.widget.Toast.makeText(
-                                                        context,
-                                                        context.getString(
-                                                            R.string.modpack_import_done,
-                                                            imported,
-                                                            files.size
-                                                        ),
-                                                        android.widget.Toast.LENGTH_SHORT
-                                                    ).show()
-                                                }
-                                            } catch (_: CancellationException) {
-                                            } catch (error: Exception) {
-                                                com.bepinex.android.BepInExLog.e("Download modpack import failed", error)
-                                                withContext(Dispatchers.Main) {
-                                                    android.widget.Toast.makeText(
-                                                        context,
-                                                        context.getString(R.string.import_failed),
-                                                        android.widget.Toast.LENGTH_SHORT
-                                                    ).show()
-                                                }
-                                            }
-                                        }
-                                    }
-                                )
+                                    )
                                 }
                             )
                             1 -> {

@@ -382,6 +382,13 @@
     <string name="play_version">Version %1$s</string>
     <string name="play_modpack">Modpack: %1$s</string>
     <string name="play_modpack_vanilla">Modpack: vanilla</string>
+    <string name="play_mod_title">Mod</string>
+    <string name="play_mod_hint">Choose a .dll or a .bal modpack. Launch uses the selected mod.</string>
+    <string name="play_mod_pick">Choose file</string>
+    <string name="play_mod_version">Version %1$s</string>
+    <string name="play_mod_none">No mod selected</string>
+    <string name="play_mod_invalid_file">Choose a .dll mod or a .bal modpack</string>
+    <string name="play_mod_installed">Installed %1$s</string>
     <string name="play_game_options">Game options</string>
     <string name="play_checklist">Readiness</string>
     <string name="play_working">Working…</string>
