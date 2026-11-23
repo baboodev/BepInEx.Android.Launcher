@@ -16,7 +16,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import android.view.View
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -92,26 +91,11 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        val splashScreen = installSplashScreen()
-        // Hold the system splash until the first Compose frame, then show the
-        // full Bugtopia art (windowBackground) as a short exit hold.
-        var keepSplash = true
-        splashScreen.setKeepOnScreenCondition { keepSplash }
-        splashScreen.setOnExitAnimationListener { provider ->
-            provider.iconView.visibility = View.GONE
-            provider.view.setBackgroundResource(R.drawable.bg_splash)
-            provider.view.animate()
-                .setStartDelay(700L)
-                .setDuration(280L)
-                .alpha(0f)
-                .withEndAction { provider.remove() }
-                .start()
-        }
+        // Required by SplashScreen: switches Manifest splash theme → postSplashScreenTheme.
+        // Do not keep the splash with setKeepOnScreenCondition — that blocked the UI (ANR).
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        window.decorView.post {
-            keepSplash = false
-        }
 
         // A native crash cannot execute a finally block; archive the previous
         // run before initializing and appending to the current launcher log.

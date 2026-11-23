@@ -1,19 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Cold-start splash: full Bugtopia art as window background. -->
+    <!--
+      Cold-start splash (Android 12+ SplashScreen API + compat).
+      Manifest applies this to MainActivity. Background must be a solid color;
+      artwork is the centered splash icon. See:
+      https://developer.android.com/develop/ui/views/launch/splash-screen
+    -->
     <style name="Theme.BepInEx.Launcher.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@android:color/black</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_empty_icon</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
         <item name="windowSplashScreenAnimationDuration">0</item>
         <item name="postSplashScreenTheme">@style/Theme.BepInEx.Launcher</item>
+        <!-- Pre-API 31 starting window (compat). -->
         <item name="android:windowBackground">@drawable/bg_splash</item>
-        <item name="android:statusBarColor">@android:color/black</item>
-        <item name="android:navigationBarColor">@android:color/black</item>
     </style>
 
-    <!-- Post-splash Compose UI theme. -->
+    <!-- Applied by installSplashScreen() via postSplashScreenTheme. -->
     <style name="Theme.BepInEx.Launcher" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:windowBackground">@drawable/bg_splash</item>
+        <item name="android:windowBackground">@android:color/black</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
