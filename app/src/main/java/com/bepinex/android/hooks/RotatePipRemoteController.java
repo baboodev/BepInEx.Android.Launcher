@@ -9,8 +9,6 @@ import android.util.Log;
 
 import com.bepinex.android.settings.AppSettings;
 
-import java.lang.ref.WeakReference;
-
 /**
  * When "Rotate to mod remote" is enabled: stable portrait → PiP + ModRemoteActivity;
  * stable landscape → finish remote + bring the game task forward.
@@ -22,7 +20,9 @@ public final class RotatePipRemoteController {
     static final String EXTRA_SESSION = "session";
     static final String EXTRA_FINISH = "finish";
 
-    private static WeakReference<Activity> gameActivityRef = new WeakReference<>(null);
+    // Strong ref: a WeakReference is cleared while the game sits in PiP (paused),
+    // which breaks landscape restore (finish remote + moveTaskToFront).
+    private static Activity gameActivity;
     private static DeviceOrientationGate gate;
     private static boolean remoteOpen;
 
@@ -30,7 +30,7 @@ public final class RotatePipRemoteController {
 
     public static void attach(Activity activity) {
         if (activity == null) return;
-        gameActivityRef = new WeakReference<>(activity);
+        gameActivity = activity;
         if (!AppSettings.INSTANCE.isRotateToModRemoteEnabled(activity)) {
             stopGate();
             return;
@@ -44,17 +44,16 @@ public final class RotatePipRemoteController {
     }
 
     public static void detach(Activity activity) {
-        Activity current = gameActivityRef.get();
-        if (current != null && activity != null && current != activity) return;
+        if (gameActivity != null && activity != null && gameActivity != activity) return;
         stopGate();
-        gameActivityRef = new WeakReference<>(null);
+        gameActivity = null;
         remoteOpen = false;
     }
 
     private static void ensureGate(Activity activity) {
         if (gate != null) return;
         gate = new DeviceOrientationGate(activity.getApplicationContext(), portrait -> {
-            Activity game = gameActivityRef.get();
+            Activity game = gameActivity;
             if (game == null || game.isFinishing()) return;
             if (!AppSettings.INSTANCE.isRotateToModRemoteEnabled(game)) {
                 stopGate();
