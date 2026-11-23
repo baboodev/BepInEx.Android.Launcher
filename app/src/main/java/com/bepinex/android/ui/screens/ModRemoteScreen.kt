@@ -30,7 +30,9 @@ import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ModRemoteScreen() {
+fun ModRemoteScreen(
+    client: com.bepinex.android.remote.ModSettingsClient? = null,
+) {
     val toggles = remember {
         mutableStateMapOf<String, Boolean>().apply {
             for (key in RemotePanelIpc.WHITELIST_KEYS) put(key, false)
@@ -38,6 +40,10 @@ fun ModRemoteScreen() {
     }
     var note by remember { mutableStateOf("Waiting for mod…") }
     var stale by remember { mutableStateOf(true) }
+
+    // Binder client is held for Task 6 schema UI; file IPC remains fallback until then.
+    @Suppress("UNUSED_VARIABLE")
+    val binderClient = client
 
     LaunchedEffect(Unit) {
         while (true) {
