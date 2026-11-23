@@ -512,10 +512,7 @@ class BootstrapActivity : Activity() {
      * BepInEx core copy when present. See extract site above for why.
      */
     private fun applyBugtopiaIl2CppInteropOverlay(bepInExDir: File) {
-        val overlay = File(
-            android.os.Environment.getExternalStorageDirectory(),
-            "Bugtopia/patches/Il2CppInterop.Runtime.dll"
-        )
+        val overlay = HeartopiaReadiness.overlayFile
         if (!overlay.isFile) {
             return
         }

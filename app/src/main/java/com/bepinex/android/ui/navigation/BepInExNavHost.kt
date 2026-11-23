@@ -24,9 +24,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Article
 import androidx.compose.material.icons.filled.FolderZip
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.SportsEsports
+import com.bepinex.android.auth.XdGoogleWebAuth
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -142,7 +144,7 @@ private data class VersionMismatchPrompt(
 )
 
 /**
- * Root navigation host: MAIN pager (Games / Modpacks / Settings) plus detail routes.
+ * Root navigation host: MAIN pager (Play / Mods / Settings / Logs) plus detail routes.
  */
 @Composable
 fun BepInExNavHost(
@@ -164,6 +166,7 @@ fun BepInExNavHost(
     onSelectGame: (GameDetector.DetectedGame) -> Unit,
     onRescan: () -> Unit,
     onLaunch: (modpackName: String?) -> Unit,
+    onExtractFramework: () -> Unit = {},
     onThemeChanged: (AppSettings.ThemeMode) -> Unit,
     onLanguageChanged: (AppSettings.Language) -> Unit,
     onDynamicColorChanged: (Boolean) -> Unit,
@@ -481,7 +484,7 @@ fun BepInExNavHost(
 
     val showBottomBar = currentRoute == NavRoutes.MAIN
 
-    val pagerState = rememberPagerState(pageCount = { 3 })
+    val pagerState = rememberPagerState(pageCount = { 4 })
 
     val configuration = LocalConfiguration.current
     val isTablet = configuration.screenWidthDp >= 600
@@ -537,7 +540,7 @@ fun BepInExNavHost(
                 ) + fadeOut(animationSpec = tween(200))
             }
         ) {
-                // Main pager — Games, Modpacks, Settings
+                // Main pager — Play, Mods, Settings, Logs
                 composable(route = NavRoutes.MAIN) {
                     HorizontalPager(
                         state = pagerState,
@@ -545,20 +548,15 @@ fun BepInExNavHost(
                         beyondViewportPageCount = 2
                     ) { page ->
                         when (page) {
-                            0 -> GameScreen(
-                                detectedGames = detectedGames,
-                                selectedGame = selectedGame,
+                            0 -> PlayScreen(
+                                game = selectedGame,
                                 isScanning = isScanning,
                                 isFrameworkReady = isFrameworkReady,
                                 isExtracting = isExtracting,
                                 extractionStatus = extractionStatus,
-                                extractionError = extractionError,
                                 activeModpackName = activeModpackName,
-                                activeModpackEnabledCount = if (activeModpackName != null)
-                                    modpacks.find { it.name == activeModpackName }?.enabledModCount ?: 0 else 0,
-                                activeModpackModCount = if (activeModpackName != null)
-                                    modpacks.find { it.name == activeModpackName }?.modCount ?: 0 else 0,
-                                onSelectGame = onSelectGame,
+                                isSwitchingModpack = isSwitchingModpack,
+                                showIncompleteBanner = showIncompleteBanner,
                                 onRescan = onRescan,
                                 onLaunch = {
                                     if (isSwitchingModpack) {
@@ -571,8 +569,7 @@ fun BepInExNavHost(
                                         onLaunch(activeModpackName)
                                     }
                                 },
-                                isSwitchingModpack = isSwitchingModpack,
-                                onExportLogs = onExportLogs,
+                                onExtractFramework = onExtractFramework,
                                 onGameSettings = {
                                     selectedGame?.let { game ->
                                         navController.navigate(
@@ -580,11 +577,12 @@ fun BepInExNavHost(
                                         )
                                     }
                                 },
-                                onShowAnnouncement = onShowAnnouncement,
-                                showIncompleteBanner = showIncompleteBanner
+                                onExportLogs = onExportLogs,
+                                onShowAnnouncement = onShowAnnouncement
                             )
                             1 -> {
-                                val packageName = selectedGame?.packageName ?: ""
+                                val packageName = selectedGame?.packageName
+                                    ?: XdGoogleWebAuth.HEARTOPIA_PACKAGE
 
                                 ModpackListScreen(
                                     packageName = packageName,
@@ -712,6 +710,31 @@ fun BepInExNavHost(
                                     },
                                     isLanguageIncompleteShown = AppSettings.isLanguageIncompleteShown(settingsContext),
                                     onLanguageIncompleteShown = { AppSettings.setLanguageIncompleteShown(settingsContext, true) }
+                                )
+                            }
+                            3 -> {
+                                val packageName = selectedGame?.packageName
+                                    ?: XdGoogleWebAuth.HEARTOPIA_PACKAGE
+                                val modpackLog = BepInExPaths.getModpackLogFile(packageName, activeModpackName)
+                                val logFile = if (activeModpackName.isNullOrEmpty() || !modpackLog.exists()) {
+                                    BepInExPaths.getLogFile(packageName)
+                                } else {
+                                    modpackLog
+                                }
+                                val autoScroll = AppSettings.isLogAutoScrollEnabled(context)
+                                val logWordWrap = AppSettings.isLogWordWrapEnabled(context)
+                                val logLineNumbers = AppSettings.isLogLineNumbersEnabled(context)
+                                LogViewerScreen(
+                                    logFilePath = logFile.absolutePath,
+                                    onNavigateBack = {},
+                                    showBackButton = false,
+                                    onSettingsClick = { navController.navigate(NavRoutes.LOG_VIEWER_SETTINGS) },
+                                    autoScroll = autoScroll,
+                                    wordWrap = logWordWrap,
+                                    showLineNumbers = logLineNumbers,
+                                    onAutoScrollChange = { AppSettings.setLogAutoScrollEnabled(context, it) },
+                                    onWordWrapChange = { AppSettings.setLogWordWrapEnabled(context, it) },
+                                    onLineNumbersChange = { AppSettings.setLogLineNumbersEnabled(context, it) }
                                 )
                             }
                         }
@@ -1160,22 +1183,26 @@ fun BepInExNavHost(
                     NavigationRailItem(
                         selected = pagerState.currentPage == 0,
                         onClick = { composeScope.launch { if (animationDisabled) pagerState.scrollToPage(0) else pagerState.animateScrollToPage(0) } },
-                        icon = { Icon(Icons.Filled.SportsEsports, stringResource(R.string.nav_games)) },
-                        label = { Text(stringResource(R.string.nav_games)) }
+                        icon = { Icon(Icons.Filled.PlayArrow, stringResource(R.string.nav_play)) },
+                        label = { Text(stringResource(R.string.nav_play)) }
                     )
                     NavigationRailItem(
                         selected = pagerState.currentPage == 1,
                         onClick = { composeScope.launch { if (animationDisabled) pagerState.scrollToPage(1) else pagerState.animateScrollToPage(1) } },
-                        enabled = selectedGame != null,
-                        icon = { Icon(Icons.Filled.FolderZip, stringResource(R.string.nav_modpacks)) },
-                        label = { Text(stringResource(R.string.nav_modpacks)) }
+                        icon = { Icon(Icons.Filled.FolderZip, stringResource(R.string.nav_mods)) },
+                        label = { Text(stringResource(R.string.nav_mods)) }
                     )
                     NavigationRailItem(
                         selected = pagerState.currentPage == 2,
                         onClick = { composeScope.launch { if (animationDisabled) pagerState.scrollToPage(2) else pagerState.animateScrollToPage(2) } },
-                        enabled = selectedGame != null,
                         icon = { Icon(Icons.Filled.Settings, stringResource(R.string.nav_settings)) },
                         label = { Text(stringResource(R.string.nav_settings)) }
+                    )
+                    NavigationRailItem(
+                        selected = pagerState.currentPage == 3,
+                        onClick = { composeScope.launch { if (animationDisabled) pagerState.scrollToPage(3) else pagerState.animateScrollToPage(3) } },
+                        icon = { Icon(Icons.Filled.Article, stringResource(R.string.nav_logs)) },
+                        label = { Text(stringResource(R.string.nav_logs)) }
                     )
                 }
                 Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
@@ -1211,36 +1238,47 @@ fun BepInExNavHost(
                         }
                     }
                 },
-                icon = { Icon(Icons.Filled.SportsEsports, stringResource(R.string.nav_games)) },
-                label = { Text(stringResource(R.string.nav_games)) }
+                icon = { Icon(Icons.Filled.PlayArrow, stringResource(R.string.nav_play)) },
+                label = { Text(stringResource(R.string.nav_play)) }
             )
             NavigationBarItem(
                 selected = pagerState.currentPage == 1,
                 onClick = {
-                    if (selectedGame != null && pagerState.currentPage != 1) {
+                    if (pagerState.currentPage != 1) {
                         composeScope.launch {
                             if (animationDisabled) pagerState.scrollToPage(1)
                             else pagerState.animateScrollToPage(1)
                         }
                     }
                 },
-                enabled = selectedGame != null,
-                icon = { Icon(Icons.Filled.FolderZip, stringResource(R.string.nav_modpacks)) },
-                label = { Text(stringResource(R.string.nav_modpacks)) }
+                icon = { Icon(Icons.Filled.FolderZip, stringResource(R.string.nav_mods)) },
+                label = { Text(stringResource(R.string.nav_mods)) }
             )
             NavigationBarItem(
                 selected = pagerState.currentPage == 2,
                 onClick = {
-                    if (selectedGame != null && pagerState.currentPage != 2) {
+                    if (pagerState.currentPage != 2) {
                         composeScope.launch {
                             if (animationDisabled) pagerState.scrollToPage(2)
                             else pagerState.animateScrollToPage(2)
                         }
                     }
                 },
-                enabled = selectedGame != null,
                 icon = { Icon(Icons.Filled.Settings, stringResource(R.string.nav_settings)) },
                 label = { Text(stringResource(R.string.nav_settings)) }
+            )
+            NavigationBarItem(
+                selected = pagerState.currentPage == 3,
+                onClick = {
+                    if (pagerState.currentPage != 3) {
+                        composeScope.launch {
+                            if (animationDisabled) pagerState.scrollToPage(3)
+                            else pagerState.animateScrollToPage(3)
+                        }
+                    }
+                },
+                icon = { Icon(Icons.Filled.Article, stringResource(R.string.nav_logs)) },
+                label = { Text(stringResource(R.string.nav_logs)) }
             )
         }
     }

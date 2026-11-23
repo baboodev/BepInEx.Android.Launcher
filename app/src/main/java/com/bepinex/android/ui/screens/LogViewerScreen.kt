@@ -62,6 +62,7 @@ private suspend fun readLogFile(path: String): LogReadResult = withContext(Dispa
 fun LogViewerScreen(
     logFilePath: String,
     onNavigateBack: () -> Unit,
+    showBackButton: Boolean = true,
     onSettingsClick: () -> Unit = {},
     autoScroll: Boolean = true,
     wordWrap: Boolean = false,
@@ -139,8 +140,10 @@ fun LogViewerScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.log_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Filled.ArrowBack, stringResource(R.string.back))
+                    if (showBackButton) {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(Icons.Filled.ArrowBack, stringResource(R.string.back))
+                        }
                     }
                 },
                 actions = {

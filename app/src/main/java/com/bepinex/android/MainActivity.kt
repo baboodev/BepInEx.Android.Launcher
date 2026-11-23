@@ -36,10 +36,10 @@ import java.io.File
 import java.io.RandomAccessFile
 
 /**
- * Main launcher Activity  -- Compose UI for multi-game BepInEx mod management.
+ * Bugtopia launcher activity for Heartopia.
  *
- * On launch, auto-detects installed Unity IL2CPP games via [GameDetector].
- * User selects a game, manages mods, and launches it through [BootstrapActivity].
+ * Pins [com.bepinex.android.auth.XdGoogleWebAuth.HEARTOPIA_PACKAGE], then launches
+ * it through [BootstrapActivity].
  */
 class MainActivity : ComponentActivity() {
 
@@ -230,24 +230,25 @@ class MainActivity : ComponentActivity() {
             isScanning = true
 
             try {
-                detectedGames = GameDetector.detectGames(this@MainActivity)
-                BepInExLog.i("Detected ${detectedGames.size} Unity IL2CPP game(s)")
-
-                if (selectedGame == null && detectedGames.isNotEmpty()) {
-                    selectGame(detectedGames.first())
+                val heartopia = GameDetector.detectPackage(
+                    this@MainActivity,
+                    com.bepinex.android.auth.XdGoogleWebAuth.HEARTOPIA_PACKAGE
+                )
+                detectedGames = listOfNotNull(heartopia)
+                if (heartopia != null) {
+                    selectGame(heartopia)
+                } else {
+                    selectedGame = null
+                    BepInExLog.i(
+                        "Heartopia (${com.bepinex.android.auth.XdGoogleWebAuth.HEARTOPIA_PACKAGE}) is not installed"
+                    )
                 }
             } catch (e: Exception) {
                 BepInExLog.e("Game detection failed", e)
             }
 
             isScanning = false
-
-            // Restore selected game after activity recreation (e.g. language switch)
-            val saved = savedPackageName
-            if (saved != null) {
-                savedPackageName = null
-                detectedGames.find { it.packageName == saved }?.let { selectGame(it) }
-            }
+            savedPackageName = null
         }
     }
 
@@ -263,6 +264,7 @@ class MainActivity : ComponentActivity() {
     // Framework extraction
 
     private fun startExtraction(packageName: String) {
+        if (isExtracting) return
         isExtracting = true
         extractionStatus = getString(R.string.extracting)
 
@@ -941,6 +943,12 @@ class MainActivity : ComponentActivity() {
                         startGameDetection()
                     },
                     onLaunch = { modpackName -> launchGame(modpackName) },
+                    onExtractFramework = {
+                        startExtraction(
+                            selectedGame?.packageName
+                                ?: com.bepinex.android.auth.XdGoogleWebAuth.HEARTOPIA_PACKAGE
+                        )
+                    },
                     onThemeChanged = { onThemeChanged(it) },
                     onLanguageChanged = { onLanguageChanged(it) },
                     onDynamicColorChanged = {

@@ -156,6 +156,68 @@ object GameDetector {
         return false
     }
 
+    /**
+     * Resolves one installed package. The Heartopia launcher pins this instead of
+     * offering a multi-game list. Returns null when the package is not installed.
+     */
+    suspend fun detectPackage(context: Context, packageName: String): DetectedGame? =
+        withContext(Dispatchers.IO) {
+            val pm = context.packageManager
+            val appInfo = try {
+                pm.getApplicationInfo(packageName, 0)
+            } catch (_: PackageManager.NameNotFoundException) {
+                BepInExLog.i("Package not installed: $packageName")
+                return@withContext null
+            }
+
+            val apkPath = appInfo.sourceDir ?: ""
+            val apkCandidates = buildList {
+                if (apkPath.isNotEmpty()) add(apkPath)
+                appInfo.splitSourceDirs?.forEach { add(it) }
+            }
+            val hasIl2Cpp = apkCandidates.any { checkForIl2Cpp(it) } ||
+                File(appInfo.nativeLibraryDir, "libil2cpp.so").exists()
+            if (!hasIl2Cpp) {
+                BepInExLog.w("$packageName is installed but libil2cpp.so was not found")
+            }
+
+            val label = pm.getApplicationLabel(appInfo).toString()
+            val icon = try {
+                pm.getApplicationIcon(appInfo)
+            } catch (_: Exception) {
+                null
+            }
+            var versionName = "Unknown"
+            var versionCode = 0L
+            try {
+                @Suppress("DEPRECATION")
+                val pkgInfo = pm.getPackageInfo(packageName, 0)
+                versionName = pkgInfo.versionName ?: "Unknown"
+                versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    pkgInfo.longVersionCode
+                } else {
+                    @Suppress("DEPRECATION")
+                    pkgInfo.versionCode.toLong()
+                }
+            } catch (e: Exception) {
+                Log.d(TAG, "Failed to get package info for $packageName: ${e.message}")
+            }
+
+            val unityVersion = UnityVersionLookup.find(
+                File(BepInExPaths.getGameRootDir(packageName), "Assets/bin/Data")
+            )
+            BepInExLog.i("Pinned package: $label ($packageName) v$versionName")
+            DetectedGame(
+                packageName = packageName,
+                label = label,
+                icon = icon,
+                versionName = versionName,
+                versionCode = versionCode,
+                unityVersion = unityVersion,
+                apkPath = apkPath
+            )
+        }
+
     fun invalidateCache() {
         cachedGames = null
     }

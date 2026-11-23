@@ -5,6 +5,9 @@
 
     <!-- Navigation -->
     <string name="nav_games">Games</string>
+    <string name="nav_play">Play</string>
+    <string name="nav_mods">Mods</string>
+    <string name="nav_logs">Logs</string>
     <string name="nav_modpacks">Modpacks</string>
     <string name="nav_settings">Settings</string>
     <string name="nav_about">About</string>
@@ -241,9 +244,9 @@
     <string name="lang_incomplete_message">The translation for your language is not complete. If you would like to help improve the localization, please visit [here](https://nextbep.github.io/guide/translations) to contribute.</string>
 
     <!-- About -->
-    <string name="about_title">Bugtopia Launcher</string>
-    <string name="about_description">A BepInEx loader for Unity IL2CPP games on Android</string>
-    <string name="about_disclaimer">Bugtopia Launcher is based on NextBep BepInEx.Android; not an official BepInEx release.</string>
+    <string name="about_title">Bugtopia</string>
+    <string name="about_description">Heartopia launcher for Android. Loads BepInEx into com.xd.xdtglobal.gp, with modpacks and save profiles.</string>
+    <string name="about_disclaimer">Bugtopia is based on NextBep BepInEx.Android. It is not an official Heartopia or BepInEx release.</string>
     <string name="about_projects_section">Projects Used &amp; Referenced</string>
     <string name="about_project_bepinex_name">BepInEx</string>
     <string name="about_project_bepinex_desc">Unity IL2CPP modding framework — the core plugin loader. BepInEx 6.0.0-pre.2 by BepInEx team.</string>
@@ -363,4 +366,67 @@
     <string name="settings_block_unity_kill_desc">Block UnityPlayer.kill() briefly during startup. Enable only for games that exit during injection.</string>
     <string name="crash_export_failed">Failed to export diagnostics</string>
     <string name="game_settings_title">Game Settings</string>
+
+    <!-- Heartopia Play -->
+    <string name="play_title">Bugtopia</string>
+    <string name="play_subtitle">Heartopia</string>
+    <string name="play_not_installed">Heartopia is not installed</string>
+    <string name="play_not_installed_hint">Install com.xd.xdtglobal.gp, then tap Rescan.</string>
+    <string name="play_version">Version %1$s</string>
+    <string name="play_modpack">Modpack: %1$s</string>
+    <string name="play_modpack_vanilla">Modpack: vanilla</string>
+    <string name="play_game_options">Game options</string>
+    <string name="play_checklist">Readiness</string>
+    <string name="play_working">Working…</string>
+
+    <string name="ready_framework">Framework</string>
+    <string name="ready_framework_ok">BepInEx and the .NET runtime are extracted</string>
+    <string name="ready_framework_missing">BepInEx or the .NET runtime is missing</string>
+    <string name="ready_extract">Extract</string>
+
+    <string name="ready_unity">Unity libraries</string>
+    <string name="ready_unity_ok">Cached (%1$s)</string>
+    <string name="ready_unity_missing">Unity base libraries are not cached</string>
+    <string name="ready_unity_download">Download</string>
+    <string name="ready_unity_no_version">Unity version is unknown. Launch once so game data is copied, then try again.</string>
+    <string name="ready_unity_done">Unity libraries are ready</string>
+    <string name="ready_unity_failed">Unity library download failed</string>
+
+    <string name="ready_interop">Interop</string>
+    <string name="ready_interop_ok">assembly-hash.txt and interop DLLs are present</string>
+    <string name="ready_interop_missing">Interop has not been generated yet. The next launch creates it.</string>
+    <string name="ready_interop_regen">Regen</string>
+    <string name="ready_interop_regenerated">Deleted interop DLLs and assembly-hash.txt. The next launch regenerates them.</string>
+
+    <string name="ready_mod">Bugtopia mod</string>
+    <string name="ready_mod_ok">%1$s is enabled in the active modpack</string>
+    <string name="ready_mod_disabled">%1$s is in the active modpack but disabled</string>
+    <string name="ready_mod_missing">No bugtopia DLL in the active modpack plugins</string>
+    <string name="ready_mod_no_pack">No active modpack. Add bugtopia.dll to a modpack and select it.</string>
+
+    <string name="ready_overlay">Il2CppInterop overlay</string>
+    <string name="ready_overlay_ok">Bugtopia overlay is present and is applied on launch</string>
+    <string name="ready_overlay_unused">No overlay file. Stock Il2CppInterop is used.</string>
+
+    <string name="profiles_title">Profiles</string>
+    <string name="profiles_hint">Park and restore the Heartopia account while the game is stopped. HotFix downloads are not touched.</string>
+    <string name="profiles_game_running">Stop Heartopia before switching profiles.</string>
+    <string name="profiles_name_hint">Profile name</string>
+    <string name="profiles_create">Create</string>
+    <string name="profiles_switch">Switch</string>
+    <string name="profiles_delete">Delete</string>
+    <string name="profiles_active">Active</string>
+    <string name="profiles_empty">No saved profiles yet</string>
+    <string name="profiles_unsaved">The current account is not stored as a profile. Switching will park it automatically.</string>
+    <string name="profiles_created">Profile \"%1$s\" created</string>
+    <string name="profiles_switched">Switched to \"%1$s\"</string>
+    <string name="profiles_already">\"%1$s\" is already the active profile</string>
+    <string name="profiles_deleted">Deleted \"%1$s\"</string>
+    <string name="profiles_exists">A profile with that name already exists</string>
+    <string name="profiles_invalid_name">Use a short name without slashes or reserved characters</string>
+    <string name="profiles_missing">That profile was not found</string>
+    <string name="profiles_delete_active">The active profile cannot be deleted</string>
+    <string name="profiles_failed">Profile action failed: %1$s</string>
+    <string name="profiles_delete_title">Delete profile?</string>
+    <string name="profiles_delete_message">Delete \"%1$s\"? This does not change the account currently loaded.</string>
 </resources>

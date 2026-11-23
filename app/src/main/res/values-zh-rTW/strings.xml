@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- App -->
-    <string name="app_name">BepInEx 啟動器</string>
+    <string name="app_name">Bugtopia</string>
 
     <!-- Navigation -->
     <string name="nav_games">遊戲</string>
@@ -237,9 +237,9 @@
     <string name="lang_incomplete_message">您所使用的語言翻譯並不完全，若您想獲得更佳的本土化體驗，請前往[這裡](https://nextbep.github.io/zh/guide/translations)來為您的語言貢獻翻譯。</string>
 
     <!-- About -->
-    <string name="about_title">BepInEx Android 啟動器</string>
-    <string name="about_description">一個在 arm64 平台上的 BepInEx 啟動器</string>
-    <string name="about_disclaimer">⚠ BepInEx 啟動器 未獲得 BepInEx 的官方支援。</string>
+    <string name="about_title">Bugtopia</string>
+    <string name="about_description">Heartopia（com.xd.xdtglobal.gp）的 Android 啟動器，包含 BepInEx、模組和存檔設定。</string>
+    <string name="about_disclaimer">Bugtopia 基於 NextBep BepInEx.Android，不是 Heartopia 或 BepInEx 的官方版本。</string>
     <string name="about_projects_section">本專案使用 &amp; 借鑑的專案</string>
     <string name="about_project_bepinex_name">BepInEx</string>
     <string name="about_project_bepinex_desc">Unity IL2CPP 模組框架 — 核心外掛載入器。BepInEx 6.0.0-pre.2，由 BepInEx 團隊開發。</string>

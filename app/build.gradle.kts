@@ -23,7 +23,9 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.bepinex.android"
+        // Heartopia-only Bugtopia build. Kotlin/Java sources stay in the
+        // com.bepinex.android namespace; only the installed package id changes.
+        applicationId = "org.bugtopia.mod"
         minSdk = 28
         targetSdk = 35
         versionCode = ciBuildNumber
