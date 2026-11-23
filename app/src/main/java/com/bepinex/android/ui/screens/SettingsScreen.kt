@@ -27,6 +27,7 @@ import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Animation
 import androidx.compose.material.icons.outlined.Terminal
+import androidx.compose.material.icons.outlined.PictureInPictureAlt
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -80,6 +81,9 @@ fun SettingsScreen(
     val context = LocalContext.current
     var floatingLogEnabled by remember {
         mutableStateOf(AppSettings.isFloatingModMenuEnabled(context))
+    }
+    var pipOnMinimize by remember {
+        mutableStateOf(AppSettings.isPipOnMinimizeEnabled(context))
     }
 
     Scaffold(
@@ -176,6 +180,29 @@ fun SettingsScreen(
                         AppSettings.setFloatingModMenuEnabled(context, next)
                     }
                 )
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                item {
+                    SettingListItem(
+                        title = stringResource(R.string.settings_pip_on_minimize),
+                        summary = stringResource(R.string.settings_pip_on_minimize_desc),
+                        icon = { Icon(Icons.Outlined.PictureInPictureAlt, contentDescription = null) },
+                        trailing = {
+                            Switch(
+                                checked = pipOnMinimize,
+                                onCheckedChange = { checked ->
+                                    pipOnMinimize = checked
+                                    AppSettings.setPipOnMinimizeEnabled(context, checked)
+                                }
+                            )
+                        },
+                        onClick = {
+                            val next = !pipOnMinimize
+                            pipOnMinimize = next
+                            AppSettings.setPipOnMinimizeEnabled(context, next)
+                        }
+                    )
+                }
             }
 
             item { SettingsSectionHeader(stringResource(R.string.settings_about)) }

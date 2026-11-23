@@ -199,6 +199,13 @@ public final class GameRuntime {
                     oldTheme.setAccessible(true);
                     oldTheme.set(activity, theme);
                 }
+                // Host stubs have no screenOrientation; stamp the game ActivityInfo value
+                // onto the intent so apply / PiP-exit restore can find it.
+                int orientation = InstrumentationHooks.resolveOrientationForActivity(activity, info);
+                if (orientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) {
+                    target.putExtra(InstrumentationHooks.EXTRA_TARGET_ORIENTATION, orientation);
+                    activity.setIntent(target);
+                }
                 InstrumentationHooks.applyTargetOrientation(activity);
                 if (target.hasExtra(InstrumentationHooks.EXTRA_NEXT_CONFIG)) {
                     ViewGroup decor = (ViewGroup) activity.getWindow().getDecorView();
@@ -221,10 +228,41 @@ public final class GameRuntime {
         @Override public void callActivityOnResume(Activity activity) {
             original.callActivityOnResume(activity);
             if (gameActivities.contains(activity)) {
+                // PiP exit / multi-window often clears requestedOrientation back to
+                // UNSPECIFIED — re-stamp sensorLandscape (or whatever the game declared).
+                try {
+                    InstrumentationHooks.applyTargetOrientation(activity);
+                } catch (Throwable t) {
+                    Log.e("GameRuntime", "Re-apply orientation on resume failed", t);
+                }
                 try {
                     com.bepinex.android.log.FloatingLog.maybeAttach(activity, gameContext.getPackageName());
                 } catch (Throwable t) {
                     Log.e("GameRuntime", "Failed to attach floating log overlay", t);
+                }
+                try {
+                    PictureInPictureHelper.onResume(activity);
+                } catch (Throwable t) {
+                    Log.e("GameRuntime", "PiP onResume failed", t);
+                }
+            }
+        }
+        @Override public void callActivityOnPause(Activity activity) {
+            // Instrumentation never sees onUserLeaveHint — enter PiP here (API 26–30), or
+            // rely on setAutoEnterEnabled (API 31+) which already swapped modes before pause.
+            if (gameActivities.contains(activity)) {
+                try {
+                    PictureInPictureHelper.onBeforePause(activity);
+                } catch (Throwable t) {
+                    Log.e("GameRuntime", "PiP onBeforePause failed", t);
+                }
+            }
+            original.callActivityOnPause(activity);
+            if (gameActivities.contains(activity)) {
+                try {
+                    PictureInPictureHelper.onPause(activity);
+                } catch (Throwable t) {
+                    Log.e("GameRuntime", "PiP onPause resume failed", t);
                 }
             }
         }
@@ -252,6 +290,13 @@ public final class GameRuntime {
             wrapped.setComponent(new android.content.ComponentName(
                     com.bepinex.android.BuildConfig.APPLICATION_ID,
                     com.bepinex.android.SecondaryStubActivity.class.getName()));
+            try {
+                ActivityInfo info = gameContext.getPackageManager().getActivityInfo(intent.getComponent(), 0);
+                if (info.screenOrientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) {
+                    wrapped.putExtra(InstrumentationHooks.EXTRA_TARGET_ORIENTATION, info.screenOrientation);
+                }
+            } catch (Exception ignored) {
+            }
             return wrapped;
         }
 

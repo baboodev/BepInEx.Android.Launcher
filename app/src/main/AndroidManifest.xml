@@ -92,6 +92,8 @@
             android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|orientation|screenLayout|uiMode|screenSize|smallestScreenSize|fontScale|layoutDirection|density"
             android:hardwareAccelerated="true"
             android:launchMode="standard"
+            android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
             android:exported="false" />
 
         <!-- Secondary stub used when the running game starts its own activities.
@@ -104,6 +106,8 @@
             android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|orientation|screenLayout|uiMode|screenSize|smallestScreenSize|fontScale|layoutDirection|density"
             android:hardwareAccelerated="true"
             android:launchMode="standard"
+            android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
             android:exported="false" />
 
         <!-- Handles desktop shortcut intents for modpack quick-launch -->

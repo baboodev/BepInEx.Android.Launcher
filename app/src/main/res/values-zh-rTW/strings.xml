@@ -195,6 +195,8 @@
     <string name="settings_animation_disabled_desc">關閉動畫可提升部分效能。</string>
     <string name="settings_floating_log">遊戲內日誌按鈕</string>
     <string name="settings_floating_log_desc">在遊戲左下角顯示 BepInEx 日誌懸浮按鈕。預設關閉。</string>
+    <string name="settings_pip_on_minimize">最小化時子母畫面</string>
+    <string name="settings_pip_on_minimize_desc">離開遊戲（Home / 手勢）時以子母畫面小窗繼續執行。預設關閉；下次啟動生效。</string>
     <string name="animation_restart_title">需要重新啟動</string>
     <string name="animation_restart_message">重新啟動後才會關閉動畫，是否立即重新啟動？</string>
     <string name="animation_restart_now">重新啟動</string>

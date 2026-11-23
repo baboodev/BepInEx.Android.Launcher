@@ -15,6 +15,7 @@ object AppSettings {
     private const val KEY_THEME_MODE = "theme_mode"
     private const val KEY_LANGUAGE = "language"
     private const val KEY_FLOATING_MOD_MENU = "floating_mod_menu"
+    private const val KEY_PIP_ON_MINIMIZE = "pip_on_minimize"
     private const val KEY_ACTIVE_MODPACK_PREFIX = "active_modpack_"
     private const val KEY_USE_UNSTRIPPED_LIBUNITY = "use_unstripped_libunity"
     // B-specific: per-game overrides (kept alongside the global keys)
@@ -136,6 +137,16 @@ object AppSettings {
 
     fun setFloatingModMenuEnabled(context: Context, enabled: Boolean) {
         prefs(context).edit().putBoolean(KEY_FLOATING_MOD_MENU, enabled).apply()
+    }
+
+    // Picture-in-Picture on Home / leave-hint. Off by default. commit() so the :game process
+    // sees the value on the next launch (SharedPreferences apply() is async across processes).
+
+    fun isPipOnMinimizeEnabled(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_PIP_ON_MINIMIZE, false)
+
+    fun setPipOnMinimizeEnabled(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean(KEY_PIP_ON_MINIMIZE, enabled).commit()
     }
 
     fun getActiveModpack(context: Context, packageName: String): String? =

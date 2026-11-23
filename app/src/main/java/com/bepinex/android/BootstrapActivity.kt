@@ -394,6 +394,12 @@ class BootstrapActivity : Activity() {
             }
         }
 
+        // NativeLibraryManager always routes "unity" through codeCacheScoped/libunity.so.
+        // Custom Unity forks (Heartopia XD) have no unstripped release — without a cache
+        // file the native-overrides symlink is dangling and Unity dies with
+        // "Could not load symbol il2cpp_*".
+        ensureCachedLibUnity(File(gameLibDir), codeCacheScoped, useOriginalLibUnity)
+
         // Extract the BepInEx runtime (config/ is preserved across launches)
         updateProgress(getString(R.string.bootstrap_status_extracting_runtime), "", 50)
         Utilities.extractZipFromAssets(appContext, "BepInEx.Android.zip", bepInExDir, "config/")
@@ -704,6 +710,30 @@ class BootstrapActivity : Activity() {
     }
 
     // ------------------------------------------------------------------ extraction
+
+    /**
+     * Guarantees [codeCacheScoped]/libunity.so} exists before native-overrides are linked.
+     * When [useGameStock] is true (or the cache is empty), copies the game's own libunity.
+     */
+    private fun ensureCachedLibUnity(gameLibDir: File, codeCacheScoped: File, useGameStock: Boolean) {
+        val cached = File(codeCacheScoped, "libunity.so")
+        val gameUnity = File(gameLibDir, "libunity.so")
+        val cacheOk = cached.isFile && cached.length() > 1_000_000L
+        // Keep a successful unstripped download; otherwise (missing cache or forced stock)
+        // seed from the game's own libunity so native-overrides is never a dangling link.
+        if (!useGameStock && cacheOk) return
+        if (!gameUnity.isFile) {
+            throw IllegalStateException("Game libunity.so missing at ${gameUnity.absolutePath}")
+        }
+        if (useGameStock && cacheOk && cached.length() == gameUnity.length()) return
+        codeCacheScoped.mkdirs()
+        FileInputStream(gameUnity).use { input ->
+            FileOutputStream(cached, false).use { output -> input.copyTo(output) }
+        }
+        BepInExLog.i(
+            "Cached libunity.so from game-libs (${cached.length()} bytes, stock=$useGameStock)"
+        )
+    }
 
     private fun dotnetDir(): File =
         File(getDir(RUNTIME_DIR_NAME, Context.MODE_PRIVATE), "dotnet")

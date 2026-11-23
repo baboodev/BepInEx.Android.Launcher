@@ -20,7 +20,8 @@ public class InstrumentationHooks {
     public static final String EXTRA_TARGET_ORIENTATION = "nextbep.target_orientation";
     public static final String EXTRA_NEXT_CONFIG = "nextbep.config";
 
-    static void applyTargetOrientation(Activity activity) {
+    /** Re-apply locked orientation (create, resume after PiP, SecondaryStub wrap). */
+    public static void applyTargetOrientation(Activity activity) {
         try {
             Intent intent = activity.getIntent();
             if (intent == null) {
@@ -28,6 +29,9 @@ public class InstrumentationHooks {
             }
             int orientation = readTargetOrientation(intent);
             if (orientation == ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) {
+                return;
+            }
+            if (activity.getRequestedOrientation() == orientation) {
                 return;
             }
             activity.setRequestedOrientation(orientation);
@@ -38,7 +42,27 @@ public class InstrumentationHooks {
         }
     }
 
+    /**
+     * Prefer intent extras, then the real game ActivityInfo.screenOrientation
+     * (SecondaryStub has none in the host manifest).
+     */
+    public static int resolveOrientationForActivity(Activity activity, ActivityInfo gameInfo) {
+        Intent intent = activity != null ? activity.getIntent() : null;
+        int fromIntent = readTargetOrientation(intent);
+        if (fromIntent != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) {
+            return fromIntent;
+        }
+        if (gameInfo != null
+                && gameInfo.screenOrientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) {
+            return gameInfo.screenOrientation;
+        }
+        return ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
+    }
+
     private static int readTargetOrientation(Intent intent) {
+        if (intent == null) {
+            return ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
+        }
         int orientation = intent.getIntExtra(EXTRA_TARGET_ORIENTATION,
                 ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
         if (orientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) {
