@@ -1,8 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Base launcher theme — follows system DayNight by default -->
-    <style name="Theme.BepInEx.Launcher" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- Cold-start splash: full Bugtopia art as window background. -->
+    <style name="Theme.BepInEx.Launcher.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@android:color/black</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_empty_icon</item>
+        <item name="windowSplashScreenAnimationDuration">0</item>
+        <item name="postSplashScreenTheme">@style/Theme.BepInEx.Launcher</item>
+        <item name="android:windowBackground">@drawable/bg_splash</item>
+        <item name="android:statusBarColor">@android:color/black</item>
+        <item name="android:navigationBarColor">@android:color/black</item>
+    </style>
 
+    <!-- Post-splash Compose UI theme. -->
+    <style name="Theme.BepInEx.Launcher" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@drawable/bg_splash</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
 
     <!-- FusionCore-compatible Unity theme (matches their UnityThemeSelector) -->
     <style name="UnityThemeSelector" parent="BaseUnityTheme">
