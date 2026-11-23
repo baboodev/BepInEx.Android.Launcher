@@ -46,7 +46,7 @@ public final class DeviceOrientationGate {
         listener.onStableOrientation(pendingPortrait);
     }
 
-    static boolean isPortraitAngle(int angle) {
+    public static boolean isPortraitAngle(int angle) {
         return (angle >= 45 && angle < 135) || (angle >= 225 && angle < 315);
     }
 

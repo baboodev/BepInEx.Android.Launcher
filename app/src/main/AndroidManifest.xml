@@ -117,6 +117,17 @@
             android:launchMode="standard"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
+        <!-- Rotate-to-PiP mod remote panel (default process, not :game). -->
+        <activity
+            android:name="com.bepinex.android.ModRemoteActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.BepInEx.Launcher"
+            android:excludeFromRecents="true"
+            android:taskAffinity="com.bepinex.android.modremote"
+            android:configChanges="keyboard|keyboardHidden|screenSize" />
+
         <!-- In-process login-xdsdk WebView (intercepts bugtopia:// redirect).
              Must be :game — same process as GoogleSignImpl pending callback. -->
         <activity
