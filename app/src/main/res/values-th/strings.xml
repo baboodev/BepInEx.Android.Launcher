@@ -1,0 +1,446 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App -->
+    <string name="app_name">Bugtopia</string>
+
+    <!-- Navigation -->
+    <string name="nav_games">เกม</string>
+    <string name="nav_play">เล่น</string>
+    <string name="nav_mods">ม็อด</string>
+    <string name="nav_logs">ล็อก</string>
+    <string name="nav_modpacks">ชุดม็อด</string>
+    <string name="nav_settings">การตั้งค่า</string>
+    <string name="nav_about">เกี่ยวกับ</string>
+
+    <!-- Game Detection -->
+    <string name="scan_title">เกมที่พบ</string>
+    <string name="scanning">กำลังตรวจสอบเกม…</string>
+    <string name="no_games_found">ไม่พบเกม</string>
+    <string name="no_games_hint">ติดตั้งเกม Unity ที่รองรับ แล้วแตะสแกนอีกครั้ง</string>
+    <string name="scan_again">สแกนอีกครั้ง</string>
+    <string name="rescan">สแกนใหม่</string>
+
+    <!-- Framework Status -->
+    <string name="framework_ready">BepInEx พร้อมแล้ว</string>
+    <string name="framework_setting_up">กำลังตั้งค่า…</string>
+    <string name="framework_setup_failed">ตั้งค่าไม่สำเร็จ</string>
+    <string name="framework_retry">ลองตั้งค่าอีกครั้ง</string>
+    <string name="extracting">กำลังแตกไฟล์ BepInEx…</string>
+
+    <!-- Actions -->
+    <string name="launch">เริ่ม</string>
+    <string name="refresh">รีเฟรช</string>
+    <string name="delete">ลบ</string>
+
+    <!-- Mods -->
+    <string name="installed_mods">ม็อดที่ติดตั้ง</string>
+    <string name="import_failed">นำเข้าไม่สำเร็จ</string>
+
+    <!-- Modpacks -->
+    <string name="modpack_title">ชุดม็อด</string>
+    <string name="modpack_create">สร้างชุดม็อด</string>
+    <string name="modpack_actions">การทำงานของชุดม็อด</string>
+    <string name="modpack_actions_close">ปิดเมนูการทำงาน</string>
+    <string name="modpack_rename">เปลี่ยนชื่อ</string>
+    <string name="modpack_rename_failed">ชื่อไม่ถูกต้องหรือมีอยู่แล้ว</string>
+    <string name="modpack_edit">แก้ไขชุดม็อด</string>
+    <string name="modpack_icon">ไอคอน</string>
+    <string name="modpack_icon_hint">แตะเพื่อเลือกรูป</string>
+    <string name="modpack_shortcut_create">สร้างทางลัดบนหน้าจอ</string>
+    <string name="shortcut_permission_title">ต้องขอสิทธิ์</string>
+    <string name="shortcut_permission_guide">การสร้างทางลัดต้องใช้สิทธิ์ \"ทางลัดหน้าจอหลัก\" โปรดเปิดสิทธิ์นี้ในหน้าการตั้งค่าที่จะเปิดขึ้น</string>
+    <string name="shortcut_permission_open_settings">เปิดการตั้งค่า</string>
+    <string name="modpack_vanilla_desc">ไม่ได้โหลดม็อด</string>
+    <string name="modpack_empty">ยังไม่มีชุดม็อด</string>
+    <string name="modpack_switching">กำลังสลับชุดม็อด…</string>
+    <string name="launch_wait_modpack_switch">รอให้การสลับชุดม็อดเสร็จก่อน</string>
+    <string name="modpack_empty_hint">นำเข้าชุดม็อด .bal หรือ .zip ที่นี่ อย่าเพิ่มไฟล์บีบอัดเป็น DLL ม็อดไฟล์เดียว</string>
+    <string name="modpack_export">ส่งออก</string>
+    <string name="modpack_export_preparing">กำลังเตรียมส่งออก…</string>
+    <string name="modpack_export_progress">กำลังส่งออก %1$d / %2$d ไฟล์</string>
+    <string name="modpack_export_cancel">ยกเลิก</string>
+    <string name="share_modpack">แชร์ชุดม็อด</string>
+    <string name="export_failed">ส่งออกไม่สำเร็จ</string>
+    <string name="modpack_import">นำเข้าชุดม็อด</string>
+    <string name="modpack_import_done">นำเข้าแล้ว %1$d จาก %2$d ชุด</string>
+    <string name="modpack_import_auto_scan">สแกนอัตโนมัติ</string>
+    <string name="modpack_import_manual">นำเข้าเอง</string>
+    <string name="modpack_importing">กำลังนำเข้าชุดม็อด…</string>
+    <string name="modpack_import_cancel">ยกเลิก</string>
+    <string name="modpack_invalid_file">นำเข้าได้เฉพาะไฟล์ชุดม็อด .bal หรือ .zip</string>
+    <string name="modpack_invalid_archive">ไฟล์เก็บถาวรต้องมี modpack.json</string>
+    <string name="modpack_vanilla">ต้นฉบับ (ไม่มีม็อด)</string>
+    <string name="modpack_name_hint">ชื่อชุดม็อด</string>
+    <string name="modpack_game_version">เวอร์ชันเกมที่รองรับ</string>
+    <string name="modpack_game_version_hint">เว้นว่างไว้ถ้าใช้ได้ทุกเวอร์ชัน คั่นหลายเวอร์ชันด้วยจุลภาค</string>
+    <string name="modpack_game_version_value">สำหรับ v%s</string>
+    <string name="modpack_game_version_unset">ยังไม่ได้ตั้งเวอร์ชันที่รองรับ</string>
+    <string name="modpack_game_version_any">ทุกเวอร์ชัน</string>
+    <string name="modpack_game_version_mismatch_title">เวอร์ชันไม่ตรงกัน</string>
+    <string name="modpack_game_version_mismatch_message">ชุดม็อดนี้สำหรับ %1$s แต่เกมปัจจุบันคือ %2$s นำเข้าต่อหรือไม่?</string>
+    <string name="modpack_game_version_mismatch_continue">นำเข้าต่อ</string>
+    <string name="modpack_confirm_delete_title">ลบชุดม็อด</string>
+    <string name="modpack_confirm_delete_msg">ลบ \"%s\" และม็อดทั้งหมดหรือไม่? ยกเลิกไม่ได้</string>
+    <string name="modpack_scan_downloads_title">ชุดม็อดในดาวน์โหลด</string>
+    <string name="modpack_scan_downloads_message">พบไฟล์ .bal %d ไฟล์ในดาวน์โหลด นำเข้าไฟล์ที่เลือกหรือไม่?</string>
+    <string name="modpack_scan_downloads_import">นำเข้า</string>
+    <string name="modpack_scan_downloads_skip">ไว้ก่อน</string>
+    <string name="modpack_scan_downloads_empty">ไม่พบชุดม็อด .bal ในดาวน์โหลด</string>
+    <string name="modpack_scan_dlls_title">ม็อดในดาวน์โหลด</string>
+    <string name="modpack_scan_dlls_message">พบไฟล์ .dll %d ไฟล์ในดาวน์โหลด นำเข้าไฟล์ที่เลือกเข้าชุดม็อดนี้หรือไม่?</string>
+    <string name="modpack_scan_dlls_empty">ไม่พบม็อด .dll ในดาวน์โหลด</string>
+    <string name="modpack_scan_dlls_imported">นำเข้าแล้ว %1$d จาก %2$d ม็อด</string>
+    <string name="modpack_import_from_other">จากชุดม็อดอื่น</string>
+    <string name="modpack_import_from_other_title">เลือกชุดม็อด</string>
+    <string name="modpack_import_from_other_empty">ไม่มีชุดม็อดอื่นให้นำเข้า</string>
+    <string name="modpack_import_from_other_no_mods">ชุดม็อดนี้ไม่มีม็อด</string>
+    <string name="modpack_import_from_other_mods_title">ม็อดใน %s</string>
+    <string name="modpack_import_from_other_mods_message">ม็อดที่เลือกและไฟล์คอนฟิกที่ตรงกันจะถูกคัดลอกเข้าชุดม็อดนี้</string>
+    <string name="modpack_import_from_other_select_all">เลือกทั้งหมด</string>
+    <string name="modpack_import_from_other_deselect_all">ยกเลิกการเลือกทั้งหมด</string>
+    <string name="modpack_import_from_other_imported">นำเข้าแล้ว %1$d จาก %2$d ม็อด (ไฟล์คอนฟิก %3$d ไฟล์)</string>
+    <string name="modpack_no_mods">ไม่มีม็อดในชุดนี้</string>
+    <string name="modpack_add_mod">เพิ่มม็อด</string>
+    <string name="modpack_invalid_mod_file">เพิ่มได้เฉพาะไฟล์ม็อด .dll</string>
+    <string name="modpack_add_mod_archive_hint">ไฟล์ ZIP/BAL เป็นชุดม็อด ให้ใช้ นำเข้าชุดม็อด ในหน้าชุดม็อดแทน</string>
+    <string name="modpack_browse_mod_files">เรียกดูไฟล์ม็อด</string>
+    <string name="modpack_browse_mod_files_desc">ดูไฟล์และโฟลเดอร์ทั้งหมดในชุดม็อดนี้</string>
+    <string name="modpack_target_game">สำหรับ: %s</string>
+    <string name="modpack_mod_count_ratio">%1$d / %2$d ม็อด</string>
+    <string name="modpack_active">ใช้งานอยู่</string>
+    <string name="modpack_mod_rename">เปลี่ยนชื่อม็อด</string>
+    <string name="modpack_mod_display_name">ชื่อที่แสดง</string>
+    <string name="modpack_mod_display_name_hint">แสดงเฉพาะใน launcher นี้ ชื่อไฟล์ DLL ไม่เปลี่ยน</string>
+    <string name="modpack_mod_file_name">ไฟล์: %s</string>
+    <string name="modpack_mod_rename_failed">ชื่อที่แสดงต้องไม่ว่าง</string>
+    <string name="modpack_mod_category">หมวดหมู่</string>
+    <string name="modpack_mod_category_set">ตั้งหมวดหมู่</string>
+    <string name="modpack_mod_category_hint">ไม่บังคับ ใช้กรองม็อดในชุดนี้</string>
+    <string name="modpack_mod_category_all">ทั้งหมด</string>
+    <string name="modpack_mod_category_uncategorized">ไม่มีหมวดหมู่</string>
+    <string name="modpack_mod_category_existing">หมวดหมู่ที่มีอยู่</string>
+    <string name="modpack_mod_category_clear">นำออก</string>
+    <string name="modpack_mod_enable">โหลดม็อดนี้</string>
+    <string name="modpack_mod_sort">เรียง</string>
+    <string name="modpack_mod_sort_name">ชื่อที่แสดง</string>
+    <string name="modpack_mod_sort_file">ชื่อไฟล์</string>
+    <string name="modpack_mod_sort_enabled_first">เปิดใช้ก่อน</string>
+    <string name="modpack_mod_sort_disabled_first">ปิดใช้ก่อน</string>
+    <string name="modpack_search_mods">ค้นหาม็อด</string>
+    <string name="modpack_search_clear">ล้างการค้นหา</string>
+    <string name="modpack_search_no_results">ไม่มีม็อดที่ตรงกัน</string>
+    <string name="modpack_scroll_to_top">กลับไปด้านบน</string>
+    <string name="modpack_scrollbar">เลื่อนรายการ</string>
+
+    <!-- Config Editor -->
+    <string name="config_editor_save">บันทึก</string>
+    <string name="config_editor_save_failed">บันทึกไฟล์ไม่สำเร็จ</string>
+    <string name="config_editor_unsaved">มีการเปลี่ยนแปลงที่ยังไม่บันทึก</string>
+    <string name="config_editor_discard_title">ทิ้งการเปลี่ยนแปลง?</string>
+    <string name="config_editor_discard_msg">มีการเปลี่ยนแปลงที่ยังไม่บันทึก ทิ้งหรือไม่?</string>
+
+    <!-- Viewer -->
+    <string name="viewer_settings">การตั้งค่าตัวแสดง</string>
+    <string name="viewer_word_wrap">ตัดบรรทัด</string>
+    <string name="viewer_word_wrap_desc">ตัดบรรทัดยาวให้พอดีความกว้างหน้าจอ</string>
+    <string name="viewer_line_numbers">หมายเลขบรรทัด</string>
+    <string name="viewer_line_numbers_desc">แสดงหมายเลขบรรทัดทางซ้าย</string>
+    <string name="viewer_empty">ไฟล์ว่าง</string>
+    <string name="viewer_cursor_position">บรรทัด %1$d คอลัมน์ %2$d</string>
+    <string name="viewer_preview">ดูตัวอย่าง</string>
+
+    <!-- Log Viewer -->
+    <string name="log_settings">การตั้งค่าล็อก</string>
+    <string name="log_auto_scroll_desc">เลื่อนลงล่างอัตโนมัติเมื่อมีเนื้อหาใหม่</string>
+    <string name="log_word_wrap">ตัดบรรทัด</string>
+    <string name="log_word_wrap_desc">ตัดบรรทัดยาวให้พอดีความกว้างหน้าจอ</string>
+    <string name="log_line_numbers">หมายเลขบรรทัด</string>
+    <string name="log_line_numbers_desc">แสดงหมายเลขบรรทัดทางซ้าย</string>
+
+    <!-- Mod File Browser -->
+    <string name="mod_file_browser_title">ไฟล์ม็อด</string>
+    <string name="mod_file_browser_empty">โฟลเดอร์นี้ว่าง</string>
+    <string name="mod_file_browser_missing">ไม่พบโฟลเดอร์ชุดม็อด</string>
+    <string name="mod_file_browser_directory">โฟลเดอร์</string>
+    <string name="mod_file_browser_editable_file">%1$s · แตะเพื่อดูหรือแก้ไข</string>
+    <string name="mod_file_browser_unsupported_file">%1$s · ไม่รองรับการดูตัวอย่าง</string>
+    <string name="mod_file_browser_edit_file">ดูหรือแก้ไขไฟล์</string>
+    <string name="mod_file_browser_delete_file">ลบไฟล์</string>
+    <string name="mod_file_browser_delete_title">ลบไฟล์?</string>
+    <string name="mod_file_browser_delete_message">ลบ \"%1$s\" หรือไม่? ยกเลิกไม่ได้</string>
+    <string name="mod_file_browser_delete_failed">ลบไฟล์ไม่สำเร็จ</string>
+    <string name="mod_file_browser_protected">ไฟล์ที่ป้องกัน</string>
+    <string name="mod_file_browser_protected_file">ข้อมูลเมตาของชุดม็อดที่ป้องกันไว้ · แก้ไขหรือลบไม่ได้</string>
+
+    <!-- Permissions -->
+    <string name="storage_permission_extract">ต้องใช้สิทธิ์ที่เก็บข้อมูลเพื่อแตกไฟล์ BepInEx</string>
+    <string name="storage_permission_all_files">โปรดให้สิทธิ์ \'เข้าถึงไฟล์ทั้งหมด\' ในการตั้งค่าแอป</string>
+
+    <!-- Settings sections -->
+    <string name="settings_title">การตั้งค่า</string>
+    <string name="settings_section_appearance">ลักษณะ</string>
+    <string name="settings_section_ingame">ในเกม</string>
+    <string name="settings_section_account">บัญชี</string>
+    <string name="settings_google_web_login">เข้าสู่ระบบ Google (เว็บ)</string>
+    <string name="settings_google_web_login_desc">เปิด OAuth ของ XD ในเบราว์เซอร์ (แบบ PC) ข้ามข้อผิดพลาด GMS 10 ใต้ launcher</string>
+    <string name="settings_section_maintenance">บำรุงรักษา</string>
+    <string name="settings_section_config">ไฟล์คอนฟิก</string>
+    <string name="settings_clear_bepinex">ล้างไฟล์ BepInEx</string>
+    <string name="settings_clear_bepinex_desc">ลบไฟล์ BepInEx และแอสเซมบลี interop ทั้งหมด ต้องแตกไฟล์ใหม่เมื่อเริ่มครั้งถัดไป</string>
+    <string name="settings_clear_dotnet">ล้างข้อมูล .NET</string>
+    <string name="settings_clear_dotnet_desc">ลบรันไทม์ .NET และข้อมูลเกมที่คัดลอกไว้ ไฟล์จะถูกแตกใหม่เมื่อเริ่มครั้งถัดไป</string>
+    <string name="settings_clear_libunity">ล้างแคช libunity</string>
+    <string name="settings_clear_libunity_desc">ลบไฟล์ libunity.so ที่ยังไม่ถูกสตริปในแคช จะถูกกู้คืนเมื่อเริ่มครั้งถัดไป</string>
+    <string name="settings_copy_resources">คัดลอกทรัพยากรเกม</string>
+    <string name="settings_copy_resources_desc">คัดลอกข้อมูลแอสเซ็ตของเกมไปยังที่เก็บในเครื่องเพื่อสร้าง interop</string>
+    <string name="copy_resources_next_launch">ทรัพยากรจะถูกคัดลอกเมื่อเริ่มครั้งถัดไป</string>
+    <string name="settings_theme">ธีม</string>
+    <string name="settings_language">ภาษา</string>
+    <string name="settings_dynamic_color">สี Monet</string>
+    <string name="settings_dynamic_color_desc">ชุดสีตามสีเน้นของระบบ (เฉพาะ Android 12 ขึ้นไป)</string>
+    <string name="settings_animation_disabled">ปิดภาพเคลื่อนไหว</string>
+    <string name="settings_animation_disabled_desc">การปิดภาพเคลื่อนไหวอาจช่วยให้เครื่องบางรุ่นทำงานลื่นขึ้น</string>
+    <string name="settings_floating_log">ปุ่มล็อกในเกม</string>
+    <string name="settings_floating_log_desc">แสดงปุ่มลอยของล็อก BepInEx ที่มุมล่างซ้ายขณะเกมทำงาน ปิดไว้เป็นค่าเริ่มต้น</string>
+    <string name="settings_pip_on_minimize">ภาพซ้อนภาพเมื่อย่อ</string>
+    <string name="settings_pip_on_minimize_desc">เมื่อออกจากเกม (หน้าแรก / ท่าทาง) ให้เล่นต่อในหน้าต่าง PiP ปิดไว้เป็นค่าเริ่มต้น มีผลเมื่อเริ่มครั้งถัดไป</string>
+    <string name="settings_rotate_to_mod_remote">หมุนเพื่อเปิดรีโมตม็อด</string>
+    <string name="settings_rotate_to_mod_remote_desc">ในแนวตั้ง ย่อเกมเป็น PiP แล้วเปิดแผงควบคุมม็อด ปิดไว้เป็นค่าเริ่มต้น</string>
+    <string name="mod_settings_title">การตั้งค่าม็อด</string>
+    <string name="mod_settings_disconnected">ม็อดไม่ได้เชื่อมต่อ</string>
+    <string name="mod_settings_file_fallback">ใช้ไฟล์สำรอง</string>
+    <string name="animation_restart_title">ต้องรีสตาร์ท</string>
+    <string name="animation_restart_message">ภาพเคลื่อนไหวจะปิดหลังจากรีสตาร์ทแอป รีสตาร์ทตอนนี้หรือไม่?</string>
+    <string name="animation_restart_now">รีสตาร์ท</string>
+    <string name="settings_about">เกี่ยวกับ</string>
+
+    <!-- Confirm Dialogs -->
+    <string name="confirm_clear_bepinex_title">ล้างไฟล์ BepInEx?</string>
+    <string name="confirm_clear_bepinex_msg">การนี้จะลบไฟล์ BepInEx และแอสเซมบลี interop ทั้งหมดของเกมนี้ ต้องแตกไฟล์ใหม่เมื่อเริ่มครั้งถัดไป</string>
+    <string name="confirm_clear_dotnet_title">ล้างข้อมูล .NET?</string>
+    <string name="confirm_clear_dotnet_msg">การนี้จะลบรันไทม์ .NET และข้อมูลเกมที่คัดลอกของเกมนี้ ไฟล์จะถูกแตกใหม่เมื่อเริ่มครั้งถัดไป</string>
+    <string name="confirm_clear_libunity_title">ล้างแคช libunity?</string>
+    <string name="confirm_clear_libunity_msg">การนี้จะลบไฟล์ libunity.so ที่ยังไม่ถูกสตริปในแคช จะถูกกู้คืนเมื่อเริ่มครั้งถัดไป</string>
+    <string name="clear_libunity_done">ล้างแคช libunity แล้ว</string>
+    <string name="clear_libunity_none">ไม่มีแคช libunity ให้ล้าง</string>
+    <string name="confirm_copy_resources_title">คัดลอกทรัพยากรเกม?</string>
+    <string name="confirm_copy_resources_msg">การนี้จะคัดลอกข้อมูลทรัพยากรของเกมจาก APK ไปยังที่เก็บในเครื่อง</string>
+    <string name="confirm_yes">ใช่</string>
+    <string name="confirm_no">ไม่</string>
+    <string name="confirm_cancel">ยกเลิก</string>
+    <string name="confirm_delete">ลบ</string>
+
+    <!-- Theme -->
+    <string name="theme_dark">มืด</string>
+    <string name="theme_light">สว่าง</string>
+    <string name="theme_system">ตามระบบ</string>
+
+    <!-- Language -->
+    <string name="lang_system">ตามระบบ</string>
+    <string name="lang_english">English</string>
+    <string name="lang_spanish">Español</string>
+    <string name="lang_chinese">简体中文</string>
+    <string name="lang_portuguese_br">Português (Brasil)</string>
+    <string name="lang_thai">ไทย</string>
+    <string name="lang_korean">한국어</string>
+    <string name="lang_incomplete_title">การแปลยังไม่สมบูรณ์</string>
+    <string name="lang_incomplete_message">การแปลภาษาของคุณยังไม่สมบูรณ์ หากต้องการช่วยปรับปรุงการแปล โปรดไปที่ [ที่นี่](https://nextbep.github.io/guide/translations)</string>
+
+    <!-- About -->
+    <string name="about_title">Bugtopia</string>
+    <string name="about_description">ตัวเปิดเกม Android สำหรับ Heartopia โหลดม็อด Bugtopia พร้อมชุดม็อดและโปรไฟล์บัญชี</string>
+    <string name="about_disclaimer">Bugtopia ไม่ใช่แอปทางการของ Heartopia</string>
+    <string name="about_version">เวอร์ชัน %1$s</string>
+    <string name="about_package">org.bugtopia.mod</string>
+    <string name="about_news">ข่าว Bugtopia</string>
+    <string name="about_news_desc">ช่อง Telegram</string>
+    <string name="about_url_telegram">https://t.me/bugtopiamod</string>
+    <string name="about_credits_intro">Bugtopia สำหรับ Heartopia สร้างขึ้นจากโปรเจกต์เหล่านี้ ขอบคุณผู้จัดทำ</string>
+    <string name="about_projects_section">ขอบคุณ</string>
+    <string name="about_project_bepinex_name">BepInEx</string>
+    <string name="about_project_bepinex_desc">เฟรมเวิร์กม็อด Unity IL2CPP — ตัวโหลดปลั๊กอินหลัก BepInEx 6.0.0-pre.2 โดยทีม BepInEx</string>
+    <string name="about_project_fusioncore_name">FusionCore</string>
+    <string name="about_project_fusioncore_desc">คอนเทนเนอร์รันไทม์ Unity IL2CPP บน Android ของทีม Starlight ข้อมูลอ้างอิงหลักของสายฉีด, hook ของ Pine และสถาปัตยกรรม NativeLoader</string>
+    <string name="about_project_nextbep_name">NextBep (BepInEx.Android)</string>
+    <string name="about_project_nextbep_desc">ตัวเปิด BepInEx บน Android ที่แอปนี้อ้างอิง ขอบคุณผู้จัดทำ NextBep</string>
+    <string name="about_project_dotnet_name">dotnet/runtime</string>
+    <string name="about_project_dotnet_desc">Microsoft .NET Runtime v10.0.5 สร้างจากซอร์สด้วยแบ็กเอนด์เข้ารหัส OpenSSL เพื่อแก้ SIGSEGV ของ BoringSSL บน Android 16</string>
+    <string name="about_project_openssl_name">OpenSSL</string>
+    <string name="about_project_openssl_desc">OpenSSL 3.4.0 — ใช้แทน BoringSSL สำหรับการเข้ารหัส ARM64 บน Android มี libcrypto.so + libssl.so</string>
+    <string name="about_project_pine_name">Pine</string>
+    <string name="about_project_pine_desc">เฟรมเวิร์ก hook เมธอด Java บน ART (top.canyie.pine:core:0.3.0) ใช้กับ hook ของ ClassLoader, PackageManager และ UnityPlayer</string>
+    <string name="about_project_dobby_name">Dobby</string>
+    <string name="about_project_dobby_desc">เฟรมเวิร์ก hook เนทีฟสำหรับ ARM64 ใช้กับ hook il2cpp_init ใน libnextbep</string>
+    <string name="about_project_cpp2il_name">Cpp2IL</string>
+    <string name="about_project_cpp2il_desc">เครื่องมือวิศวกรรมย้อนกลับ IL2CPP ใช้สร้างแอสเซมบลี interop</string>
+    <string name="about_url_bepinex">https://github.com/BepInEx/BepInEx</string>
+    <string name="about_url_fusioncore">https://github.com/All-Of-Us-Mods/FusionCore</string>
+    <string name="about_url_nextbep">https://github.com/NextBep/BepInEx.Android</string>
+    <string name="about_url_dotnet">https://github.com/dotnet/runtime</string>
+    <string name="about_url_openssl">https://github.com/openssl/openssl</string>
+    <string name="about_url_pine">https://github.com/canyie/Pine</string>
+    <string name="about_url_dobby">https://github.com/jmpews/Dobby</string>
+    <string name="about_url_cpp2il">https://github.com/SamboyCoding/Cpp2IL</string>
+    <string name="about_dev_section">ตัวเปิดต้นทาง</string>
+    <string name="about_dev_names">HayashiUme</string>
+    <string name="about_footer">Bugtopia สำหรับ Heartopia</string>
+    <string name="about_sponsor">สนับสนุน</string>
+    <string name="about_sponsor_desc">สนับสนุนการพัฒนา</string>
+    <string name="about_sponsor_code_desc">คิวอาร์โค้ดสนับสนุน</string>
+    <string name="about_sponsor_tipping">สนับสนุนการพัฒนาด้วยทิป</string>
+    <string name="about_sponsor_note">การสนับสนุนเป็นไปโดยสมัครใจ คุณจะไม่ได้รับรางวัลหรือสิทธิพิเศษใน launcher</string>
+    <string name="about_credits">เครดิต</string>
+    <string name="about_credits_desc">โปรเจกต์ที่ launcher นี้สร้างขึ้น</string>
+    <string name="about_contact">ติดต่อเรา</string>
+    <string name="about_contact_desc">ขอความช่วยเหลือหรือส่งความคิดเห็น</string>
+    <string name="about_privacy_policy">นโยบายความเป็นส่วนตัว</string>
+    <string name="about_privacy_policy_desc">เราจัดการข้อมูลของคุณอย่างไร</string>
+    <string name="about_official_docs">เอกสารทางการ</string>
+    <string name="about_official_docs_desc">คู่มือติดตั้งและการแก้ปัญหา</string>
+
+    <!-- Log -->
+    <string name="log_title">ล็อก BepInEx</string>
+    <string name="log_share">แชร์</string>
+    <string name="log_copy">คัดลอก</string>
+    <string name="log_empty">ยังไม่มีรายการล็อก เริ่มเกมเพื่อดูล็อก BepInEx</string>
+    <string name="log_auto_scroll">เลื่อนอัตโนมัติ</string>
+
+    <!-- In-Game Floating Log Overlay -->
+    <string name="log_overlay_channel_name">ล็อกลอย BepInEx</string>
+    <string name="log_overlay_channel_desc">แสดงขณะล็อกลอยในเกมทำงาน</string>
+    <string name="log_overlay_notification_text">ล็อกลอยทำงานอยู่ — แตะเพื่อกลับไปเกม</string>
+    <string name="log_overlay_open">เปิดล็อก</string>
+    <string name="log_overlay_drag_hint">ลากเพื่อย้าย</string>
+    <string name="log_overlay_minimize">ย่อล็อกลอย</string>
+    <string name="log_overlay_waiting">กำลังรอล็อก…</string>
+
+    <!-- In-Game Settings -->
+    <string name="settings_unstripped_libunity">ใช้ libunity ที่ไม่ถูกสตริป</string>
+    <string name="settings_unstripped_libunity_desc">ใช้ libunity.so ที่ไม่ถูกสตริป พร้อม icall ครบ</string>
+
+    <!-- Launch -->
+    <string name="launch_failed">เริ่มไม่สำเร็จ</string>
+    <string name="launch_wait_extraction">โปรดรอ — BepInEx ยังแตกไฟล์อยู่</string>
+
+    <!-- Crash -->
+    <string name="crash_title">พบข้อผิดพลาดขณะทำงาน</string>
+    <string name="crash_game_info">%1$s ออกอย่างไม่คาดคิด</string>
+    <string name="crash_signal">สัญญาณ: %1$s</string>
+    <string name="crash_hint">โปรดส่งล็อกที่ส่งออกให้ผู้พัฒนาเพื่อตรวจสอบ</string>
+    <string name="crash_export_logs">ส่งออกล็อก</string>
+    <string name="crash_copy">คัดลอก</string>
+
+    <!-- Generic -->
+    <string name="ok">ตกลง</string>
+    <string name="back">กลับ</string>
+    <string name="close">ปิด</string>
+    <string name="loading">กำลังโหลด…</string>
+    <string name="loader_preloader">กำลังเรียกใช้ Preloader…</string>
+    <string name="loader_initialized_chainloader">กำลังเตรียม Chainloader…</string>
+    <string name="loader_running_chainloader">กำลังเรียกใช้ Chainloader…</string>
+    <string name="loader_loading_plugin">กำลังโหลด %1$s</string>
+    <string name="loader_downloading_unity_assemblies">กำลังดาวน์โหลดแอสเซมบลี Unity…</string>
+    <string name="loader_running_cpp2il">กำลังเรียกใช้ Cpp2IL…</string>
+    <string name="loader_generating_interop">กำลังสร้างไฟล์ interop ของ IL2CPP…</string>
+    <string name="error">ข้อผิดพลาด</string>
+    <string name="done">เสร็จสิ้น</string>
+    <string name="operation_failed">ไม่สำเร็จ: %1$s</string>
+    <string name="share_saved">บันทึกข้อความแล้ว สลับกลับไปเกม</string>
+
+    <!-- Update -->
+    <string name="update_announcement">ประกาศ</string>
+    <string name="update_available">มีอัปเดต</string>
+    <string name="update_version_info">ปัจจุบัน: %1$s → ใหม่: %2$s</string>
+    <string name="update_now">อัปเดต</string>
+    <string name="update_skip">ข้าม</string>
+    <string name="update_blocked_title">ยุติการให้บริการ</string>
+    <string name="update_blocked_message">แอปพลิเคชันนี้ยุติการให้บริการและไม่สามารถใช้งานได้อีก</string>
+
+    <!-- Bootstrap Loading -->
+    <string name="bootstrap_status_preparing">กำลังเตรียมแพ็กเกจเป้าหมาย…</string>
+    <string name="bootstrap_status_copy_assets">กำลังคัดลอกข้อมูล Unity…</string>
+    <string name="bootstrap_status_detecting_version">กำลังตรวจเวอร์ชัน Unity…</string>
+    <string name="bootstrap_status_downloading_libunity">กำลังเตรียม libunity ที่ไม่ถูกสตริป…</string>
+    <string name="bootstrap_status_preparing_unity_libraries">กำลังเตรียมไลบรารีพื้นฐานของ Unity…</string>
+    <string name="bootstrap_status_extracting_runtime">กำลังแตกไฟล์รันไทม์…</string>
+    <string name="bootstrap_status_installing_hooks">กำลังติดตั้ง hook…</string>
+    <string name="bootstrap_status_launching">กำลังเริ่มเกม…</string>
+    <string name="bootstrap_status_error">เริ่มไม่สำเร็จ</string>
+    <string name="bootstrap_request_il2cpp_map">เลือกแมปถอดการทำให้ IL2CPP อ่านยาก (.map)</string>
+    <string name="bootstrap_file_ext_mismatch">ไฟล์ที่เลือกต้องเป็นไฟล์ .%1$s</string>
+    <string name="bootstrap_no_il2cpp_map">ไม่ได้เลือกแมปถอดการทำให้ IL2CPP อ่านยาก ม็อดอาจโหลดไม่สำเร็จ</string>
+    <string name="settings_block_unity_kill">บล็อกการออกของ Unity ตอนเริ่ม</string>
+    <string name="settings_block_unity_kill_desc">บล็อก UnityPlayer.kill() ชั่วครู่ระหว่างเริ่มต้น เปิดเฉพาะเกมที่ปิดตัวระหว่างการฉีด</string>
+    <string name="crash_export_failed">ส่งออกข้อมูลวินิจฉัยไม่สำเร็จ</string>
+    <string name="game_settings_title">การตั้งค่าเกม</string>
+
+    <!-- Heartopia Play -->
+    <string name="play_title">Bugtopia</string>
+    <string name="play_subtitle">Heartopia</string>
+    <string name="play_not_installed">ยังไม่ได้ติดตั้ง Heartopia</string>
+    <string name="play_not_installed_hint">ติดตั้ง com.xd.xdtglobal.gp แล้วแตะสแกนใหม่</string>
+    <string name="play_version">เวอร์ชัน %1$s</string>
+    <string name="play_modpack">ชุดม็อด: %1$s</string>
+    <string name="play_modpack_vanilla">ชุดม็อด: ต้นฉบับ</string>
+    <string name="play_mod_title">Bugtopia</string>
+    <string name="play_mod_hint">เลือกไฟล์ .dll หรือชุดม็อด .bal การเริ่มใช้ม็อดที่เลือก</string>
+    <string name="play_mod_pick">เลือกไฟล์</string>
+    <string name="play_mod_version">เวอร์ชัน %1$s</string>
+    <string name="play_mod_none">ยังไม่ได้เลือกม็อด</string>
+    <string name="play_mod_invalid_file">เลือกม็อด .dll หรือชุดม็อด .bal</string>
+    <string name="play_mod_installed">ติดตั้ง %1$s แล้ว</string>
+    <string name="play_game_options">ตัวเลือกเกม</string>
+    <string name="play_checklist">ความพร้อม</string>
+    <string name="play_working">กำลังทำงาน…</string>
+
+    <string name="ready_framework">เฟรมเวิร์ก</string>
+    <string name="ready_framework_ok">แตกไฟล์ BepInEx และรันไทม์ .NET แล้ว</string>
+    <string name="ready_framework_missing">ไม่มี BepInEx หรือรันไทม์ .NET</string>
+    <string name="ready_extract">แตกไฟล์</string>
+
+    <string name="ready_unity">ไลบรารี Unity</string>
+    <string name="ready_unity_ok">อยู่ในแคช (%1$s)</string>
+    <string name="ready_unity_missing">ยังไม่ได้แคชไลบรารีพื้นฐานของ Unity</string>
+    <string name="ready_unity_download">ดาวน์โหลด</string>
+    <string name="ready_unity_no_version">ไม่ทราบเวอร์ชัน Unity เริ่มหนึ่งครั้งเพื่อคัดลอกข้อมูลเกม แล้วลองอีกครั้ง</string>
+    <string name="ready_unity_done">ไลบรารี Unity พร้อมแล้ว</string>
+    <string name="ready_unity_failed">ดาวน์โหลดไลบรารี Unity ไม่สำเร็จ</string>
+
+    <string name="ready_interop">Interop</string>
+    <string name="ready_interop_ok">มี assembly-hash.txt และ DLL interop แล้ว</string>
+    <string name="ready_interop_missing">ยังไม่ได้สร้าง interop การเริ่มครั้งถัดไปจะสร้างให้</string>
+    <string name="ready_interop_regen">สร้างใหม่</string>
+    <string name="ready_interop_regenerated">ลบ DLL interop และ assembly-hash.txt แล้ว การเริ่มครั้งถัดไปจะสร้างใหม่</string>
+
+    <string name="ready_mod">ม็อด Bugtopia</string>
+    <string name="ready_mod_ok">เปิดใช้ %1$s ในชุดม็อดที่ใช้งานอยู่</string>
+    <string name="ready_mod_disabled">มี %1$s ในชุดม็อดที่ใช้งานอยู่ แต่ปิดอยู่</string>
+    <string name="ready_mod_missing">ไม่มี DLL bugtopia ในปลั๊กอินของชุดม็อดที่ใช้งานอยู่</string>
+    <string name="ready_mod_no_pack">ไม่มีชุดม็อดที่ใช้งานอยู่ เพิ่ม bugtopia.dll ลงในชุดม็อดแล้วเลือก</string>
+
+    <string name="ready_overlay">โอเวอร์เลย์ Il2CppInterop</string>
+    <string name="ready_overlay_ok">มีโอเวอร์เลย์ Bugtopia และจะถูกใช้เมื่อเริ่ม</string>
+    <string name="ready_overlay_unused">ไม่มีไฟล์โอเวอร์เลย์ ใช้ Il2CppInterop เดิม</string>
+
+    <string name="profiles_title">โปรไฟล์</string>
+    <string name="profiles_hint">พักและกู้บัญชี Heartopia ขณะเกมหยุดอยู่ ไม่แตะต้องการดาวน์โหลด HotFix</string>
+    <string name="profiles_game_running">หยุด Heartopia ก่อนสลับโปรไฟล์</string>
+    <string name="profiles_name_hint">ชื่อโปรไฟล์</string>
+    <string name="profiles_create">สร้าง</string>
+    <string name="profiles_switch">สลับ</string>
+    <string name="profiles_delete">ลบ</string>
+    <string name="profiles_active">ใช้งานอยู่</string>
+    <string name="profiles_empty">ยังไม่มีโปรไฟล์ที่บันทึก</string>
+    <string name="profiles_unsaved">บัญชียังไม่ได้เก็บเป็นโปรไฟล์ การสลับจะพักบัญชีให้อัตโนมัติ</string>
+    <string name="profiles_created">สร้างโปรไฟล์ \"%1$s\" แล้ว</string>
+    <string name="profiles_switched">สลับไป \"%1$s\" แล้ว</string>
+    <string name="profiles_already">\"%1$s\" เป็นโปรไฟล์ที่ใช้งานอยู่แล้ว</string>
+    <string name="profiles_deleted">ลบ \"%1$s\" แล้ว</string>
+    <string name="profiles_exists">มีโปรไฟล์ชื่อนี้อยู่แล้ว</string>
+    <string name="profiles_invalid_name">ใช้ชื่อสั้นที่ไม่มีเครื่องหมายทับหรืออักขระสงวน</string>
+    <string name="profiles_missing">ไม่พบโปรไฟล์นั้น</string>
+    <string name="profiles_delete_active">ลบโปรไฟล์ที่ใช้งานอยู่ไม่ได้</string>
+    <string name="profiles_failed">การทำงานของโปรไฟล์ล้มเหลว: %1$s</string>
+    <string name="profiles_delete_title">ลบโปรไฟล์?</string>
+    <string name="profiles_delete_message">ลบ \"%1$s\" หรือไม่? การนี้ไม่เปลี่ยนบัญชีที่โหลดอยู่</string>
+</resources>

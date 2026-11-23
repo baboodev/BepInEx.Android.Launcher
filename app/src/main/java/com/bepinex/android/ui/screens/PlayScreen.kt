@@ -199,7 +199,6 @@ fun PlayScreen(
                 isScanning = isScanning,
                 isExtracting = isExtracting,
                 extractionStatus = extractionStatus,
-                activeModpackName = activeModpackName,
                 isSwitchingModpack = isSwitchingModpack,
                 onLaunch = onLaunch,
                 onRescan = onRescan
@@ -275,7 +274,6 @@ private fun StatusCard(
     isScanning: Boolean,
     isExtracting: Boolean,
     extractionStatus: String,
-    activeModpackName: String?,
     isSwitchingModpack: Boolean,
     onLaunch: () -> Unit,
     onRescan: () -> Unit
@@ -318,13 +316,6 @@ private fun StatusCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Text(
-                    if (activeModpackName.isNullOrEmpty()) {
-                        stringResource(R.string.play_modpack_vanilla)
-                    } else {
-                        stringResource(R.string.play_modpack, activeModpackName)
-                    }
-                )
                 if (isExtracting) {
                     LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                     Text(extractionStatus.ifEmpty { stringResource(R.string.extracting) })

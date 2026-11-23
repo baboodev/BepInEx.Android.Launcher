@@ -10,7 +10,6 @@ import android.os.Environment
 import android.os.LocaleList
 import android.provider.Settings
 import android.widget.Toast
-import java.util.Locale
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -83,13 +82,8 @@ class MainActivity : ComponentActivity() {
 
     override fun attachBaseContext(newBase: Context?) {
         val ctx = newBase ?: return super.attachBaseContext(newBase)
-        val lang = AppSettings.getLanguage(ctx)
-        val locale = when (lang) {
-            AppSettings.Language.ENGLISH -> Locale.forLanguageTag("en")
-            AppSettings.Language.CHINESE -> Locale.forLanguageTag("zh-CN")
-            AppSettings.Language.CHINESE_TW -> Locale.forLanguageTag("zh-TW")
-            AppSettings.Language.SYSTEM -> return super.attachBaseContext(newBase)
-        }
+        val locale = AppSettings.getLanguage(ctx).toLocale()
+            ?: return super.attachBaseContext(newBase)
         val config = Configuration(ctx.resources.configuration)
         config.setLocales(LocaleList(locale))
         super.attachBaseContext(ctx.createConfigurationContext(config))

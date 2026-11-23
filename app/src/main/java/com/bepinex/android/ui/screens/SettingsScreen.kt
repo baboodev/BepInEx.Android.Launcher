@@ -343,8 +343,11 @@ fun SettingsScreen(
             options = listOf(
                 AppSettings.Language.SYSTEM to stringResource(R.string.lang_system),
                 AppSettings.Language.ENGLISH to stringResource(R.string.lang_english),
+                AppSettings.Language.SPANISH to stringResource(R.string.lang_spanish),
                 AppSettings.Language.CHINESE to stringResource(R.string.lang_chinese),
-                AppSettings.Language.CHINESE_TW to stringResource(R.string.lang_chinese_tw)
+                AppSettings.Language.PORTUGUESE_BR to stringResource(R.string.lang_portuguese_br),
+                AppSettings.Language.THAI to stringResource(R.string.lang_thai),
+                AppSettings.Language.KOREAN to stringResource(R.string.lang_korean)
             ),
             onDismiss = { showLanguageDialog = false },
             onSelected = {
@@ -432,8 +435,11 @@ private fun themeLabel(mode: AppSettings.ThemeMode) = when (mode) {
 private fun languageLabel(language: AppSettings.Language) = when (language) {
     AppSettings.Language.SYSTEM -> stringResource(R.string.lang_system)
     AppSettings.Language.ENGLISH -> stringResource(R.string.lang_english)
+    AppSettings.Language.SPANISH -> stringResource(R.string.lang_spanish)
     AppSettings.Language.CHINESE -> stringResource(R.string.lang_chinese)
-    AppSettings.Language.CHINESE_TW -> stringResource(R.string.lang_chinese_tw)
+    AppSettings.Language.PORTUGUESE_BR -> stringResource(R.string.lang_portuguese_br)
+    AppSettings.Language.THAI -> stringResource(R.string.lang_thai)
+    AppSettings.Language.KOREAN -> stringResource(R.string.lang_korean)
 }
 
 @Composable

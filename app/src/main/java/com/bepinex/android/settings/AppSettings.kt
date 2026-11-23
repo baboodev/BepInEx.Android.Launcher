@@ -3,6 +3,7 @@ package com.bepinex.android.settings
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatDelegate
+import java.util.Locale
 
 /**
  * Application settings persisted via SharedPreferences.
@@ -59,13 +60,34 @@ object AppSettings {
     enum class Language(val key: String) {
         SYSTEM("system"),
         ENGLISH("en"),
-        CHINESE("zh"),
-        CHINESE_TW("zh-TW");
+        SPANISH("es"),
+        CHINESE("zh-CN"),
+        PORTUGUESE_BR("pt-BR"),
+        THAI("th"),
+        KOREAN("ko");
+
+        /** Locale applied to resources. Null follows the device language. */
+        fun toLocale(): Locale? = when (this) {
+            SYSTEM -> null
+            ENGLISH -> Locale.forLanguageTag("en")
+            SPANISH -> Locale.forLanguageTag("es")
+            CHINESE -> Locale.forLanguageTag("zh-CN")
+            PORTUGUESE_BR -> Locale.forLanguageTag("pt-BR")
+            THAI -> Locale.forLanguageTag("th")
+            KOREAN -> Locale.forLanguageTag("ko")
+        }
 
         companion object {
-            fun fromKey(value: String?): Language = entries.find { it.key == value } ?: SYSTEM
+            fun fromKey(value: String?): Language {
+                if (value.isNullOrBlank()) return SYSTEM
+                // Older builds stored Simplified Chinese as "zh".
+                if (value.equals("zh", ignoreCase = true)) return CHINESE
+                return entries.find { it.key.equals(value, ignoreCase = true) } ?: SYSTEM
+            }
 
-            fun isCompleteTranslation(lang: Language) = lang == SYSTEM || lang == ENGLISH || lang == CHINESE
+            fun isCompleteTranslation(lang: Language) = when (lang) {
+                SYSTEM, ENGLISH, SPANISH, CHINESE, PORTUGUESE_BR, THAI, KOREAN -> true
+            }
         }
     }
 

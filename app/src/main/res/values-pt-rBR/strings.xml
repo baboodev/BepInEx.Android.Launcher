@@ -1,0 +1,446 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App -->
+    <string name="app_name">Bugtopia</string>
+
+    <!-- Navigation -->
+    <string name="nav_games">Jogos</string>
+    <string name="nav_play">Jogar</string>
+    <string name="nav_mods">Mods</string>
+    <string name="nav_logs">Registros</string>
+    <string name="nav_modpacks">Pacotes de mods</string>
+    <string name="nav_settings">Configurações</string>
+    <string name="nav_about">Sobre</string>
+
+    <!-- Game Detection -->
+    <string name="scan_title">Jogos detectados</string>
+    <string name="scanning">Procurando jogos…</string>
+    <string name="no_games_found">Nenhum jogo encontrado</string>
+    <string name="no_games_hint">Instale um jogo Unity compatível e toque em Verificar de novo.</string>
+    <string name="scan_again">Verificar novamente</string>
+    <string name="rescan">Verificar de novo</string>
+
+    <!-- Framework Status -->
+    <string name="framework_ready">BepInEx pronto</string>
+    <string name="framework_setting_up">Configurando…</string>
+    <string name="framework_setup_failed">Falha na configuração</string>
+    <string name="framework_retry">Tentar de novo</string>
+    <string name="extracting">Extraindo BepInEx…</string>
+
+    <!-- Actions -->
+    <string name="launch">Iniciar</string>
+    <string name="refresh">Atualizar</string>
+    <string name="delete">Excluir</string>
+
+    <!-- Mods -->
+    <string name="installed_mods">Mods instalados</string>
+    <string name="import_failed">Falha na importação</string>
+
+    <!-- Modpacks -->
+    <string name="modpack_title">Pacotes de mods</string>
+    <string name="modpack_create">Criar pacote de mods</string>
+    <string name="modpack_actions">Ações do pacote</string>
+    <string name="modpack_actions_close">Fechar ações</string>
+    <string name="modpack_rename">Renomear</string>
+    <string name="modpack_rename_failed">O nome é inválido ou já existe</string>
+    <string name="modpack_edit">Editar pacote de mods</string>
+    <string name="modpack_icon">Ícone</string>
+    <string name="modpack_icon_hint">Toque para escolher uma imagem</string>
+    <string name="modpack_shortcut_create">Criar atalho na área de trabalho</string>
+    <string name="shortcut_permission_title">Permissão necessária</string>
+    <string name="shortcut_permission_guide">Criar atalhos exige a permissão \"Atalho na tela inicial\". Ative-a na página de configurações que será aberta.</string>
+    <string name="shortcut_permission_open_settings">Abrir configurações</string>
+    <string name="modpack_vanilla_desc">Nenhum mod carregado</string>
+    <string name="modpack_empty">Nenhum pacote de mods instalado</string>
+    <string name="modpack_switching">Trocando o pacote…</string>
+    <string name="launch_wait_modpack_switch">Espere a troca do pacote terminar</string>
+    <string name="modpack_empty_hint">Importe um pacote .bal ou .zip aqui. Não adicione arquivos compactados como se fossem um único DLL de mod.</string>
+    <string name="modpack_export">Exportar</string>
+    <string name="modpack_export_preparing">Preparando a exportação…</string>
+    <string name="modpack_export_progress">Exportando %1$d / %2$d arquivos</string>
+    <string name="modpack_export_cancel">Cancelar</string>
+    <string name="share_modpack">Compartilhar pacote de mods</string>
+    <string name="export_failed">Falha na exportação</string>
+    <string name="modpack_import">Importar pacote de mods</string>
+    <string name="modpack_import_done">%1$d de %2$d pacotes importados</string>
+    <string name="modpack_import_auto_scan">Busca automática</string>
+    <string name="modpack_import_manual">Importação manual</string>
+    <string name="modpack_importing">Importando pacote…</string>
+    <string name="modpack_import_cancel">Cancelar</string>
+    <string name="modpack_invalid_file">Só é possível importar pacotes .bal ou .zip</string>
+    <string name="modpack_invalid_archive">O arquivo precisa conter modpack.json</string>
+    <string name="modpack_vanilla">Original (sem mods)</string>
+    <string name="modpack_name_hint">Nome do pacote</string>
+    <string name="modpack_game_version">Versão compatível do jogo</string>
+    <string name="modpack_game_version_hint">Deixe em branco para qualquer versão. Separe várias versões com vírgulas.</string>
+    <string name="modpack_game_version_value">Para v%s</string>
+    <string name="modpack_game_version_unset">Nenhuma versão compatível definida</string>
+    <string name="modpack_game_version_any">Qualquer versão</string>
+    <string name="modpack_game_version_mismatch_title">Versão incompatível</string>
+    <string name="modpack_game_version_mismatch_message">Este pacote é para %1$s, mas o jogo atual é %2$s. Importar mesmo assim?</string>
+    <string name="modpack_game_version_mismatch_continue">Importar mesmo assim</string>
+    <string name="modpack_confirm_delete_title">Excluir pacote de mods</string>
+    <string name="modpack_confirm_delete_msg">Excluir \"%s\" e todos os mods? Isso não pode ser desfeito.</string>
+    <string name="modpack_scan_downloads_title">Pacotes em Downloads</string>
+    <string name="modpack_scan_downloads_message">%d arquivo(s) .bal encontrado(s) em Downloads. Importar os selecionados?</string>
+    <string name="modpack_scan_downloads_import">Importar</string>
+    <string name="modpack_scan_downloads_skip">Agora não</string>
+    <string name="modpack_scan_downloads_empty">Nenhum pacote .bal encontrado em Downloads</string>
+    <string name="modpack_scan_dlls_title">Mods em Downloads</string>
+    <string name="modpack_scan_dlls_message">%d arquivo(s) .dll encontrado(s) em Downloads. Importar os selecionados para este pacote?</string>
+    <string name="modpack_scan_dlls_empty">Nenhum mod .dll encontrado em Downloads</string>
+    <string name="modpack_scan_dlls_imported">%1$d de %2$d mods importados</string>
+    <string name="modpack_import_from_other">De outro pacote</string>
+    <string name="modpack_import_from_other_title">Escolha um pacote</string>
+    <string name="modpack_import_from_other_empty">Não há outros pacotes para importar</string>
+    <string name="modpack_import_from_other_no_mods">Este pacote não tem mods</string>
+    <string name="modpack_import_from_other_mods_title">Mods em %s</string>
+    <string name="modpack_import_from_other_mods_message">Os mods selecionados e as configurações correspondentes serão copiados para este pacote.</string>
+    <string name="modpack_import_from_other_select_all">Selecionar tudo</string>
+    <string name="modpack_import_from_other_deselect_all">Limpar seleção</string>
+    <string name="modpack_import_from_other_imported">%1$d de %2$d mods importados (%3$d arquivo(s) de configuração)</string>
+    <string name="modpack_no_mods">Nenhum mod neste pacote</string>
+    <string name="modpack_add_mod">Adicionar mod</string>
+    <string name="modpack_invalid_mod_file">Só é possível adicionar mods .dll</string>
+    <string name="modpack_add_mod_archive_hint">Arquivos ZIP/BAL são pacotes de mods. Use Importar pacote de mods na página de pacotes</string>
+    <string name="modpack_browse_mod_files">Explorar arquivos do mod</string>
+    <string name="modpack_browse_mod_files_desc">Ver todos os arquivos e pastas deste pacote</string>
+    <string name="modpack_target_game">Para: %s</string>
+    <string name="modpack_mod_count_ratio">%1$d / %2$d mods</string>
+    <string name="modpack_active">Ativo</string>
+    <string name="modpack_mod_rename">Renomear mod</string>
+    <string name="modpack_mod_display_name">Nome de exibição</string>
+    <string name="modpack_mod_display_name_hint">Aparece só neste launcher. O nome do arquivo DLL não muda.</string>
+    <string name="modpack_mod_file_name">Arquivo: %s</string>
+    <string name="modpack_mod_rename_failed">O nome de exibição não pode ficar vazio</string>
+    <string name="modpack_mod_category">Categoria</string>
+    <string name="modpack_mod_category_set">Definir categoria</string>
+    <string name="modpack_mod_category_hint">Opcional. Usada para filtrar os mods deste pacote.</string>
+    <string name="modpack_mod_category_all">Todos</string>
+    <string name="modpack_mod_category_uncategorized">Sem categoria</string>
+    <string name="modpack_mod_category_existing">Categorias existentes</string>
+    <string name="modpack_mod_category_clear">Remover</string>
+    <string name="modpack_mod_enable">Carregar este mod</string>
+    <string name="modpack_mod_sort">Ordenar</string>
+    <string name="modpack_mod_sort_name">Nome de exibição</string>
+    <string name="modpack_mod_sort_file">Nome do arquivo</string>
+    <string name="modpack_mod_sort_enabled_first">Ativados primeiro</string>
+    <string name="modpack_mod_sort_disabled_first">Desativados primeiro</string>
+    <string name="modpack_search_mods">Buscar mods</string>
+    <string name="modpack_search_clear">Limpar busca</string>
+    <string name="modpack_search_no_results">Nenhum mod correspondente</string>
+    <string name="modpack_scroll_to_top">Voltar ao topo</string>
+    <string name="modpack_scrollbar">Rolar a lista</string>
+
+    <!-- Config Editor -->
+    <string name="config_editor_save">Salvar</string>
+    <string name="config_editor_save_failed">Não foi possível salvar o arquivo</string>
+    <string name="config_editor_unsaved">Alterações não salvas</string>
+    <string name="config_editor_discard_title">Descartar alterações?</string>
+    <string name="config_editor_discard_msg">Há alterações não salvas. Descartá-las?</string>
+
+    <!-- Viewer -->
+    <string name="viewer_settings">Configurações do visualizador</string>
+    <string name="viewer_word_wrap">Quebra de linha</string>
+    <string name="viewer_word_wrap_desc">Quebra linhas longas para caber na largura da tela</string>
+    <string name="viewer_line_numbers">Números de linha</string>
+    <string name="viewer_line_numbers_desc">Mostra os números de linha à esquerda</string>
+    <string name="viewer_empty">Arquivo vazio</string>
+    <string name="viewer_cursor_position">Linha %1$d, col. %2$d</string>
+    <string name="viewer_preview">Pré-visualização</string>
+
+    <!-- Log Viewer -->
+    <string name="log_settings">Configurações do registro</string>
+    <string name="log_auto_scroll_desc">Rola automaticamente até o fim quando chega conteúdo novo</string>
+    <string name="log_word_wrap">Quebra de linha</string>
+    <string name="log_word_wrap_desc">Quebra linhas longas para caber na largura da tela</string>
+    <string name="log_line_numbers">Números de linha</string>
+    <string name="log_line_numbers_desc">Mostra os números de linha à esquerda</string>
+
+    <!-- Mod File Browser -->
+    <string name="mod_file_browser_title">Arquivos do mod</string>
+    <string name="mod_file_browser_empty">Esta pasta está vazia</string>
+    <string name="mod_file_browser_missing">A pasta do pacote não existe</string>
+    <string name="mod_file_browser_directory">Pasta</string>
+    <string name="mod_file_browser_editable_file">%1$s · Toque para ver ou editar</string>
+    <string name="mod_file_browser_unsupported_file">%1$s · Pré-visualização indisponível</string>
+    <string name="mod_file_browser_edit_file">Ver ou editar arquivo</string>
+    <string name="mod_file_browser_delete_file">Excluir arquivo</string>
+    <string name="mod_file_browser_delete_title">Excluir arquivo?</string>
+    <string name="mod_file_browser_delete_message">Excluir \"%1$s\"? Isso não pode ser desfeito.</string>
+    <string name="mod_file_browser_delete_failed">Não foi possível excluir o arquivo</string>
+    <string name="mod_file_browser_protected">Arquivo protegido</string>
+    <string name="mod_file_browser_protected_file">Metadados protegidos do pacote · Não é possível editar nem excluir</string>
+
+    <!-- Permissions -->
+    <string name="storage_permission_extract">É preciso permissão de armazenamento para extrair os arquivos do BepInEx</string>
+    <string name="storage_permission_all_files">Conceda \'Acesso a todos os arquivos\' nas configurações do app</string>
+
+    <!-- Settings sections -->
+    <string name="settings_title">Configurações</string>
+    <string name="settings_section_appearance">Aparência</string>
+    <string name="settings_section_ingame">No jogo</string>
+    <string name="settings_section_account">Conta</string>
+    <string name="settings_google_web_login">Login do Google (web)</string>
+    <string name="settings_google_web_login_desc">Abre o OAuth do XD no navegador (estilo PC). Contorna o erro 10 do GMS dentro do launcher.</string>
+    <string name="settings_section_maintenance">Manutenção</string>
+    <string name="settings_section_config">Arquivos de configuração</string>
+    <string name="settings_clear_bepinex">Limpar arquivos do BepInEx</string>
+    <string name="settings_clear_bepinex_desc">Exclui todos os arquivos do BepInEx e os assemblies de interop. É preciso extraí-los de novo no próximo início.</string>
+    <string name="settings_clear_dotnet">Limpar dados do .NET</string>
+    <string name="settings_clear_dotnet_desc">Exclui o runtime do .NET e os dados copiados do jogo. Os arquivos serão extraídos de novo no próximo início.</string>
+    <string name="settings_clear_libunity">Limpar cache do libunity</string>
+    <string name="settings_clear_libunity_desc">Exclui os libunity.so sem strip que estão em cache. Eles serão restaurados no próximo início.</string>
+    <string name="settings_copy_resources">Copiar recursos do jogo</string>
+    <string name="settings_copy_resources_desc">Copia os recursos do jogo para o armazenamento local a fim de gerar o interop.</string>
+    <string name="copy_resources_next_launch">Os recursos serão copiados no próximo início</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_language">Idioma</string>
+    <string name="settings_dynamic_color">Cor Monet</string>
+    <string name="settings_dynamic_color_desc">Esquema de cores baseado na cor de destaque do sistema (somente Android 12+).</string>
+    <string name="settings_animation_disabled">Desativar animações</string>
+    <string name="settings_animation_disabled_desc">Desativar as animações pode melhorar o desempenho em alguns aparelhos.</string>
+    <string name="settings_floating_log">Botão de registro no jogo</string>
+    <string name="settings_floating_log_desc">Mostra um botão flutuante do registro do BepInEx no canto inferior esquerdo enquanto o jogo está aberto. Desativado por padrão.</string>
+    <string name="settings_pip_on_minimize">Picture-in-picture ao minimizar</string>
+    <string name="settings_pip_on_minimize_desc">Ao sair do jogo (Início / gesto), ele continua numa janela flutuante PiP. Desativado por padrão; vale no próximo início.</string>
+    <string name="settings_rotate_to_mod_remote">Girar para o controle do mod</string>
+    <string name="settings_rotate_to_mod_remote_desc">Na vertical, reduz o jogo para PiP e abre um painel de controle do mod. Desativado por padrão.</string>
+    <string name="mod_settings_title">Configurações do mod</string>
+    <string name="mod_settings_disconnected">Mod não conectado</string>
+    <string name="mod_settings_file_fallback">Usando o arquivo reserva</string>
+    <string name="animation_restart_title">Reinício necessário</string>
+    <string name="animation_restart_message">As animações serão desativadas depois de reiniciar o app. Reiniciar agora?</string>
+    <string name="animation_restart_now">Reiniciar</string>
+    <string name="settings_about">Sobre</string>
+
+    <!-- Confirm Dialogs -->
+    <string name="confirm_clear_bepinex_title">Limpar arquivos do BepInEx?</string>
+    <string name="confirm_clear_bepinex_msg">Isso exclui todos os arquivos do BepInEx e os assemblies de interop deste jogo. Será preciso extraí-los de novo no próximo início.</string>
+    <string name="confirm_clear_dotnet_title">Limpar dados do .NET?</string>
+    <string name="confirm_clear_dotnet_msg">Isso exclui o runtime do .NET e os dados copiados deste jogo. Os arquivos serão extraídos de novo no próximo início.</string>
+    <string name="confirm_clear_libunity_title">Limpar o cache do libunity?</string>
+    <string name="confirm_clear_libunity_msg">Isso exclui os libunity.so sem strip que estão em cache. Eles serão restaurados no próximo início.</string>
+    <string name="clear_libunity_done">Cache do libunity limpo</string>
+    <string name="clear_libunity_none">Não há cache do libunity para limpar</string>
+    <string name="confirm_copy_resources_title">Copiar recursos do jogo?</string>
+    <string name="confirm_copy_resources_msg">Isso copia os recursos do jogo do APK para o armazenamento local.</string>
+    <string name="confirm_yes">Sim</string>
+    <string name="confirm_no">Não</string>
+    <string name="confirm_cancel">Cancelar</string>
+    <string name="confirm_delete">Excluir</string>
+
+    <!-- Theme -->
+    <string name="theme_dark">Escuro</string>
+    <string name="theme_light">Claro</string>
+    <string name="theme_system">Padrão do sistema</string>
+
+    <!-- Language -->
+    <string name="lang_system">Padrão do sistema</string>
+    <string name="lang_english">English</string>
+    <string name="lang_spanish">Español</string>
+    <string name="lang_chinese">简体中文</string>
+    <string name="lang_portuguese_br">Português (Brasil)</string>
+    <string name="lang_thai">ไทย</string>
+    <string name="lang_korean">한국어</string>
+    <string name="lang_incomplete_title">Tradução incompleta</string>
+    <string name="lang_incomplete_message">A tradução do seu idioma não está completa. Se quiser ajudar a melhorá-la, visite [aqui](https://nextbep.github.io/guide/translations).</string>
+
+    <!-- About -->
+    <string name="about_title">Bugtopia</string>
+    <string name="about_description">Launcher de Android para Heartopia. Carrega o mod Bugtopia, com pacotes de mods e perfis de conta.</string>
+    <string name="about_disclaimer">Bugtopia não é um app oficial de Heartopia.</string>
+    <string name="about_version">Versão %1$s</string>
+    <string name="about_package">org.bugtopia.mod</string>
+    <string name="about_news">Notícias do Bugtopia</string>
+    <string name="about_news_desc">Canal do Telegram</string>
+    <string name="about_url_telegram">https://t.me/bugtopiamod</string>
+    <string name="about_credits_intro">Bugtopia para Heartopia foi feito sobre estes projetos. Obrigado aos autores.</string>
+    <string name="about_projects_section">Agradecimentos</string>
+    <string name="about_project_bepinex_name">BepInEx</string>
+    <string name="about_project_bepinex_desc">Framework de mods Unity IL2CPP — o carregador principal de plugins. BepInEx 6.0.0-pre.2 da equipe BepInEx.</string>
+    <string name="about_project_fusioncore_name">FusionCore</string>
+    <string name="about_project_fusioncore_desc">Contêiner de runtime Unity IL2CPP para Android da equipe Starlight. Referência principal da cadeia de injeção, dos hooks do Pine e da arquitetura do NativeLoader.</string>
+    <string name="about_project_nextbep_name">NextBep (BepInEx.Android)</string>
+    <string name="about_project_nextbep_desc">Launcher de BepInEx para Android no qual este app se baseia. Obrigado aos autores do NextBep.</string>
+    <string name="about_project_dotnet_name">dotnet/runtime</string>
+    <string name="about_project_dotnet_desc">Microsoft .NET Runtime v10.0.5. Compilado do código-fonte com o backend criptográfico OpenSSL para corrigir o SIGSEGV do BoringSSL no Android 16.</string>
+    <string name="about_project_openssl_name">OpenSSL</string>
+    <string name="about_project_openssl_desc">OpenSSL 3.4.0 — substitui o BoringSSL na criptografia ARM64 do Android. libcrypto.so + libssl.so.</string>
+    <string name="about_project_pine_name">Pine</string>
+    <string name="about_project_pine_desc">Framework de hooks de métodos Java no ART (top.canyie.pine:core:0.3.0). Usado nos hooks de ClassLoader, PackageManager e UnityPlayer.</string>
+    <string name="about_project_dobby_name">Dobby</string>
+    <string name="about_project_dobby_desc">Framework de hooks nativos para ARM64. Usado no hook de il2cpp_init em libnextbep.</string>
+    <string name="about_project_cpp2il_name">Cpp2IL</string>
+    <string name="about_project_cpp2il_desc">Ferramenta de engenharia reversa de IL2CPP. Usada para gerar os assemblies de interop.</string>
+    <string name="about_url_bepinex">https://github.com/BepInEx/BepInEx</string>
+    <string name="about_url_fusioncore">https://github.com/All-Of-Us-Mods/FusionCore</string>
+    <string name="about_url_nextbep">https://github.com/NextBep/BepInEx.Android</string>
+    <string name="about_url_dotnet">https://github.com/dotnet/runtime</string>
+    <string name="about_url_openssl">https://github.com/openssl/openssl</string>
+    <string name="about_url_pine">https://github.com/canyie/Pine</string>
+    <string name="about_url_dobby">https://github.com/jmpews/Dobby</string>
+    <string name="about_url_cpp2il">https://github.com/SamboyCoding/Cpp2IL</string>
+    <string name="about_dev_section">Launcher original</string>
+    <string name="about_dev_names">HayashiUme</string>
+    <string name="about_footer">Bugtopia para Heartopia</string>
+    <string name="about_sponsor">Apoiar</string>
+    <string name="about_sponsor_desc">Apoiar o desenvolvimento</string>
+    <string name="about_sponsor_code_desc">QR Code de apoio</string>
+    <string name="about_sponsor_tipping">Apoie o desenvolvimento com uma gorjeta</string>
+    <string name="about_sponsor_note">O apoio é voluntário. Você não recebe recompensas nem privilégios dentro do launcher.</string>
+    <string name="about_credits">Créditos</string>
+    <string name="about_credits_desc">Projetos nos quais este launcher se baseia</string>
+    <string name="about_contact">Fale conosco</string>
+    <string name="about_contact_desc">Pedir ajuda ou enviar um comentário</string>
+    <string name="about_privacy_policy">Política de privacidade</string>
+    <string name="about_privacy_policy_desc">Como tratamos seus dados</string>
+    <string name="about_official_docs">Documentação oficial</string>
+    <string name="about_official_docs_desc">Guias de instalação e solução de problemas</string>
+
+    <!-- Log -->
+    <string name="log_title">Registro do BepInEx</string>
+    <string name="log_share">Compartilhar</string>
+    <string name="log_copy">Copiar</string>
+    <string name="log_empty">Ainda não há registros. Inicie um jogo para ver os registros do BepInEx.</string>
+    <string name="log_auto_scroll">Rolagem automática</string>
+
+    <!-- In-Game Floating Log Overlay -->
+    <string name="log_overlay_channel_name">Registro flutuante do BepInEx</string>
+    <string name="log_overlay_channel_desc">Exibido enquanto o registro flutuante do jogo está ativo</string>
+    <string name="log_overlay_notification_text">Registro flutuante ativo — toque para voltar ao jogo</string>
+    <string name="log_overlay_open">Abrir registro</string>
+    <string name="log_overlay_drag_hint">Arraste para mover</string>
+    <string name="log_overlay_minimize">Minimizar o registro flutuante</string>
+    <string name="log_overlay_waiting">Aguardando registros…</string>
+
+    <!-- In-Game Settings -->
+    <string name="settings_unstripped_libunity">Usar libunity sem strip</string>
+    <string name="settings_unstripped_libunity_desc">Usa libunity.so sem strip, com os icalls completos.</string>
+
+    <!-- Launch -->
+    <string name="launch_failed">Falha ao iniciar</string>
+    <string name="launch_wait_extraction">Aguarde — o BepInEx ainda está sendo extraído</string>
+
+    <!-- Crash -->
+    <string name="crash_title">Erro de execução detectado</string>
+    <string name="crash_game_info">%1$s foi encerrado de forma inesperada</string>
+    <string name="crash_signal">Sinal: %1$s</string>
+    <string name="crash_hint">Envie o registro exportado ao desenvolvedor para investigação.</string>
+    <string name="crash_export_logs">Exportar registros</string>
+    <string name="crash_copy">Copiar</string>
+
+    <!-- Generic -->
+    <string name="ok">OK</string>
+    <string name="back">Voltar</string>
+    <string name="close">Fechar</string>
+    <string name="loading">Carregando…</string>
+    <string name="loader_preloader">Executando Preloader…</string>
+    <string name="loader_initialized_chainloader">Inicializando Chainloader…</string>
+    <string name="loader_running_chainloader">Executando Chainloader…</string>
+    <string name="loader_loading_plugin">Carregando %1$s</string>
+    <string name="loader_downloading_unity_assemblies">Baixando assemblies do Unity…</string>
+    <string name="loader_running_cpp2il">Executando Cpp2IL…</string>
+    <string name="loader_generating_interop">Gerando arquivos de interop do IL2CPP…</string>
+    <string name="error">Erro</string>
+    <string name="done">Concluído</string>
+    <string name="operation_failed">Falha: %1$s</string>
+    <string name="share_saved">Mensagem salva, volte ao jogo</string>
+
+    <!-- Update -->
+    <string name="update_announcement">Anúncio</string>
+    <string name="update_available">Atualização disponível</string>
+    <string name="update_version_info">Atual: %1$s → Nova: %2$s</string>
+    <string name="update_now">Atualizar</string>
+    <string name="update_skip">Pular</string>
+    <string name="update_blocked_title">Serviço encerrado</string>
+    <string name="update_blocked_message">Este aplicativo foi descontinuado e não está mais disponível.</string>
+
+    <!-- Bootstrap Loading -->
+    <string name="bootstrap_status_preparing">Preparando o pacote de destino…</string>
+    <string name="bootstrap_status_copy_assets">Copiando dados do Unity…</string>
+    <string name="bootstrap_status_detecting_version">Detectando a versão do Unity…</string>
+    <string name="bootstrap_status_downloading_libunity">Preparando libunity sem strip…</string>
+    <string name="bootstrap_status_preparing_unity_libraries">Preparando as bibliotecas base do Unity…</string>
+    <string name="bootstrap_status_extracting_runtime">Extraindo arquivos do runtime…</string>
+    <string name="bootstrap_status_installing_hooks">Instalando hooks…</string>
+    <string name="bootstrap_status_launching">Iniciando o jogo…</string>
+    <string name="bootstrap_status_error">Falha ao iniciar</string>
+    <string name="bootstrap_request_il2cpp_map">Selecione o mapa de desofuscação do IL2CPP (.map)</string>
+    <string name="bootstrap_file_ext_mismatch">O arquivo selecionado precisa ser um arquivo .%1$s</string>
+    <string name="bootstrap_no_il2cpp_map">Nenhum mapa de desofuscação do IL2CPP foi selecionado. Os mods podem não carregar.</string>
+    <string name="settings_block_unity_kill">Bloquear a saída do Unity na inicialização</string>
+    <string name="settings_block_unity_kill_desc">Bloqueia UnityPlayer.kill() por um instante na inicialização. Ative só em jogos que fecham durante a injeção.</string>
+    <string name="crash_export_failed">Falha ao exportar os diagnósticos</string>
+    <string name="game_settings_title">Configurações do jogo</string>
+
+    <!-- Heartopia Play -->
+    <string name="play_title">Bugtopia</string>
+    <string name="play_subtitle">Heartopia</string>
+    <string name="play_not_installed">Heartopia não está instalado</string>
+    <string name="play_not_installed_hint">Instale com.xd.xdtglobal.gp e toque em Verificar de novo.</string>
+    <string name="play_version">Versão %1$s</string>
+    <string name="play_modpack">Pacote de mods: %1$s</string>
+    <string name="play_modpack_vanilla">Pacote de mods: original</string>
+    <string name="play_mod_title">Bugtopia</string>
+    <string name="play_mod_hint">Escolha um .dll ou um pacote .bal. A inicialização usa o mod selecionado.</string>
+    <string name="play_mod_pick">Escolher arquivo</string>
+    <string name="play_mod_version">Versão %1$s</string>
+    <string name="play_mod_none">Nenhum mod selecionado</string>
+    <string name="play_mod_invalid_file">Escolha um mod .dll ou um pacote .bal</string>
+    <string name="play_mod_installed">%1$s instalado</string>
+    <string name="play_game_options">Opções do jogo</string>
+    <string name="play_checklist">Prontidão</string>
+    <string name="play_working">Trabalhando…</string>
+
+    <string name="ready_framework">Framework</string>
+    <string name="ready_framework_ok">BepInEx e o runtime do .NET estão extraídos</string>
+    <string name="ready_framework_missing">Falta o BepInEx ou o runtime do .NET</string>
+    <string name="ready_extract">Extrair</string>
+
+    <string name="ready_unity">Bibliotecas do Unity</string>
+    <string name="ready_unity_ok">Em cache (%1$s)</string>
+    <string name="ready_unity_missing">As bibliotecas base do Unity não estão em cache</string>
+    <string name="ready_unity_download">Baixar</string>
+    <string name="ready_unity_no_version">A versão do Unity é desconhecida. Inicie uma vez para copiar os dados do jogo e tente de novo.</string>
+    <string name="ready_unity_done">As bibliotecas do Unity estão prontas</string>
+    <string name="ready_unity_failed">Falha ao baixar as bibliotecas do Unity</string>
+
+    <string name="ready_interop">Interop</string>
+    <string name="ready_interop_ok">assembly-hash.txt e os DLLs de interop estão presentes</string>
+    <string name="ready_interop_missing">O interop ainda não foi gerado. O próximo início cria.</string>
+    <string name="ready_interop_regen">Gerar de novo</string>
+    <string name="ready_interop_regenerated">DLLs de interop e assembly-hash.txt excluídos. O próximo início gera de novo.</string>
+
+    <string name="ready_mod">Mod Bugtopia</string>
+    <string name="ready_mod_ok">%1$s está ativado no pacote ativo</string>
+    <string name="ready_mod_disabled">%1$s está no pacote ativo, mas desativado</string>
+    <string name="ready_mod_missing">Não há DLL do bugtopia nos plugins do pacote ativo</string>
+    <string name="ready_mod_no_pack">Nenhum pacote ativo. Adicione bugtopia.dll a um pacote e selecione-o.</string>
+
+    <string name="ready_overlay">Sobreposição do Il2CppInterop</string>
+    <string name="ready_overlay_ok">A sobreposição do Bugtopia está presente e é aplicada ao iniciar</string>
+    <string name="ready_overlay_unused">Não há arquivo de sobreposição. O Il2CppInterop original é usado.</string>
+
+    <string name="profiles_title">Perfis</string>
+    <string name="profiles_hint">Guarda e restaura a conta do Heartopia com o jogo parado. Os downloads do HotFix não são alterados.</string>
+    <string name="profiles_game_running">Feche o Heartopia antes de trocar de perfil.</string>
+    <string name="profiles_name_hint">Nome do perfil</string>
+    <string name="profiles_create">Criar</string>
+    <string name="profiles_switch">Trocar</string>
+    <string name="profiles_delete">Excluir</string>
+    <string name="profiles_active">Ativo</string>
+    <string name="profiles_empty">Ainda não há perfis salvos</string>
+    <string name="profiles_unsaved">A conta atual não está salva como perfil. Ao trocar, ela será guardada automaticamente.</string>
+    <string name="profiles_created">Perfil \"%1$s\" criado</string>
+    <string name="profiles_switched">Trocado para \"%1$s\"</string>
+    <string name="profiles_already">\"%1$s\" já é o perfil ativo</string>
+    <string name="profiles_deleted">\"%1$s\" excluído</string>
+    <string name="profiles_exists">Já existe um perfil com esse nome</string>
+    <string name="profiles_invalid_name">Use um nome curto, sem barras nem caracteres reservados</string>
+    <string name="profiles_missing">Esse perfil não foi encontrado</string>
+    <string name="profiles_delete_active">O perfil ativo não pode ser excluído</string>
+    <string name="profiles_failed">Falha na ação do perfil: %1$s</string>
+    <string name="profiles_delete_title">Excluir perfil?</string>
+    <string name="profiles_delete_message">Excluir \"%1$s\"? Isso não altera a conta carregada no momento.</string>
+</resources>

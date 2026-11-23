@@ -34,7 +34,7 @@ object UpdateChecker {
 
     private fun isChinese(context: Context): Boolean {
         return when (AppSettings.getLanguage(context)) {
-            AppSettings.Language.CHINESE, AppSettings.Language.CHINESE_TW -> true
+            AppSettings.Language.CHINESE -> true
             AppSettings.Language.SYSTEM ->
                 context.resources.configuration.locales[0]?.language?.equals("zh", ignoreCase = true) == true
             else -> false

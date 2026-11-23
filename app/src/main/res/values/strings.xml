@@ -239,8 +239,11 @@
     <!-- Language -->
     <string name="lang_system">System Default</string>
     <string name="lang_english">English</string>
+    <string name="lang_spanish">Español</string>
     <string name="lang_chinese">简体中文</string>
-    <string name="lang_chinese_tw">繁體中文</string>
+    <string name="lang_portuguese_br">Português (Brasil)</string>
+    <string name="lang_thai">ไทย</string>
+    <string name="lang_korean">한국어</string>
     <string name="lang_incomplete_title">Localization Not Contributed</string>
     <string name="lang_incomplete_message">The translation for your language is not complete. If you would like to help improve the localization, please visit [here](https://nextbep.github.io/guide/translations) to contribute.</string>
 
@@ -382,7 +385,7 @@
     <string name="play_version">Version %1$s</string>
     <string name="play_modpack">Modpack: %1$s</string>
     <string name="play_modpack_vanilla">Modpack: vanilla</string>
-    <string name="play_mod_title">Mod</string>
+    <string name="play_mod_title">Bugtopia</string>
     <string name="play_mod_hint">Choose a .dll or a .bal modpack. Launch uses the selected mod.</string>
     <string name="play_mod_pick">Choose file</string>
     <string name="play_mod_version">Version %1$s</string>

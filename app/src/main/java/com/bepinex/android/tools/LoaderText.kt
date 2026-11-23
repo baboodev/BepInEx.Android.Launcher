@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.res.Configuration
 import com.bepinex.android.R
 import com.bepinex.android.settings.AppSettings
-import java.util.Locale
 
 /**
  * Localizes the loader status messages that BepInEx emits through
@@ -39,12 +38,7 @@ object LoaderText {
 
     /** A context whose resources use the language picked in the launcher settings. */
     private fun localizedContext(base: Context): Context {
-        val locale: Locale = when (AppSettings.getLanguage(base)) {
-            AppSettings.Language.ENGLISH -> Locale.forLanguageTag("en")
-            AppSettings.Language.CHINESE -> Locale.forLanguageTag("zh-CN")
-            AppSettings.Language.CHINESE_TW -> Locale.forLanguageTag("zh-TW")
-            AppSettings.Language.SYSTEM -> return base
-        }
+        val locale = AppSettings.getLanguage(base).toLocale() ?: return base
         val configuration = Configuration(base.resources.configuration)
         configuration.setLocale(locale)
         return base.createConfigurationContext(configuration)

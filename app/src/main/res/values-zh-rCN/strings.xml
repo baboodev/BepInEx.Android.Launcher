@@ -4,6 +4,9 @@
     <string name="app_name">Bugtopia</string>
     <!-- Navigation -->
     <string name="nav_games">游戏</string>
+    <string name="nav_play">开始</string>
+    <string name="nav_mods">模组</string>
+    <string name="nav_logs">日志</string>
     <string name="nav_modpacks">整合包</string>
     <string name="nav_settings">设置</string>
     <string name="nav_about">关于</string>
@@ -220,8 +223,11 @@
     <!-- Language -->
     <string name="lang_system">跟随系统</string>
     <string name="lang_english">English</string>
+    <string name="lang_spanish">Español</string>
     <string name="lang_chinese">简体中文</string>
-    <string name="lang_chinese_tw">繁體中文</string>
+    <string name="lang_portuguese_br">Português (Brasil)</string>
+    <string name="lang_thai">ไทย</string>
+    <string name="lang_korean">한국어</string>
     <string name="lang_incomplete_title">本地化无人贡献</string>
     <string name="lang_incomplete_message">您所使用的语言翻译并不完全，若您想获取更好的本地化体验，请前往[这里](https://nextbep.github.io/zh/guide/translations)来为您的语言贡献翻译。</string>
     <!-- About -->
@@ -343,4 +349,74 @@
     <string name="settings_block_unity_kill_desc">在启动阶段短暂拦截 UnityPlayer.kill()。仅在游戏因注入而退出时开启。</string>
     <string name="crash_export_failed">诊断信息导出失败</string>
     <string name="game_settings_title">游戏设置</string>
+
+    <!-- Heartopia Play -->
+    <string name="play_title">Bugtopia</string>
+    <string name="play_subtitle">Heartopia</string>
+    <string name="play_not_installed">未安装 Heartopia</string>
+    <string name="play_not_installed_hint">请安装 com.xd.xdtglobal.gp，然后点按重新扫描。</string>
+    <string name="play_version">版本 %1$s</string>
+    <string name="play_modpack">整合包：%1$s</string>
+    <string name="play_modpack_vanilla">整合包：原版</string>
+    <string name="play_mod_title">Bugtopia</string>
+    <string name="play_mod_hint">选择一个 .dll 或 .bal 整合包。启动时会使用所选模组。</string>
+    <string name="play_mod_pick">选择文件</string>
+    <string name="play_mod_version">版本 %1$s</string>
+    <string name="play_mod_none">未选择模组</string>
+    <string name="play_mod_invalid_file">请选择 .dll 模组或 .bal 整合包</string>
+    <string name="play_mod_installed">已安装 %1$s</string>
+    <string name="play_game_options">游戏选项</string>
+    <string name="play_checklist">准备状态</string>
+    <string name="play_working">处理中…</string>
+
+    <string name="ready_framework">框架</string>
+    <string name="ready_framework_ok">BepInEx 和 .NET 运行时已解压</string>
+    <string name="ready_framework_missing">缺少 BepInEx 或 .NET 运行时</string>
+    <string name="ready_extract">解压</string>
+
+    <string name="ready_unity">Unity 库</string>
+    <string name="ready_unity_ok">已缓存（%1$s）</string>
+    <string name="ready_unity_missing">尚未缓存 Unity 基础库</string>
+    <string name="ready_unity_download">下载</string>
+    <string name="ready_unity_no_version">未知 Unity 版本。请先启动一次以复制游戏数据，然后再试。</string>
+    <string name="ready_unity_done">Unity 库已就绪</string>
+    <string name="ready_unity_failed">Unity 库下载失败</string>
+
+    <string name="ready_interop">Interop</string>
+    <string name="ready_interop_ok">已存在 assembly-hash.txt 和 interop DLL</string>
+    <string name="ready_interop_missing">尚未生成 interop。下次启动时会创建。</string>
+    <string name="ready_interop_regen">重新生成</string>
+    <string name="ready_interop_regenerated">已删除 interop DLL 和 assembly-hash.txt。下次启动将重新生成。</string>
+
+    <string name="ready_mod">Bugtopia 模组</string>
+    <string name="ready_mod_ok">%1$s 已在当前整合包中启用</string>
+    <string name="ready_mod_disabled">%1$s 位于当前整合包中，但未启用</string>
+    <string name="ready_mod_missing">当前整合包的插件目录中没有 bugtopia DLL</string>
+    <string name="ready_mod_no_pack">没有激活的整合包。请把 bugtopia.dll 加入整合包并选中它。</string>
+
+    <string name="ready_overlay">Il2CppInterop 覆盖层</string>
+    <string name="ready_overlay_ok">已存在 Bugtopia 覆盖层，启动时会应用</string>
+    <string name="ready_overlay_unused">没有覆盖层文件。将使用原版 Il2CppInterop。</string>
+
+    <string name="profiles_title">账号配置</string>
+    <string name="profiles_hint">在游戏停止时暂存并恢复 Heartopia 账号。不会改动 HotFix 下载内容。</string>
+    <string name="profiles_game_running">切换配置前请先停止 Heartopia。</string>
+    <string name="profiles_name_hint">配置名称</string>
+    <string name="profiles_create">创建</string>
+    <string name="profiles_switch">切换</string>
+    <string name="profiles_delete">删除</string>
+    <string name="profiles_active">当前</string>
+    <string name="profiles_empty">还没有已保存的配置</string>
+    <string name="profiles_unsaved">当前账号尚未存为配置。切换时会自动暂存。</string>
+    <string name="profiles_created">已创建配置“%1$s”</string>
+    <string name="profiles_switched">已切换到“%1$s”</string>
+    <string name="profiles_already">“%1$s”已是当前配置</string>
+    <string name="profiles_deleted">已删除“%1$s”</string>
+    <string name="profiles_exists">已有同名配置</string>
+    <string name="profiles_invalid_name">请使用不含斜杠或保留字符的短名称</string>
+    <string name="profiles_missing">找不到该配置</string>
+    <string name="profiles_delete_active">不能删除当前配置</string>
+    <string name="profiles_failed">配置操作失败：%1$s</string>
+    <string name="profiles_delete_title">删除配置？</string>
+    <string name="profiles_delete_message">删除“%1$s”？这不会更改当前已加载的账号。</string>
 </resources>
