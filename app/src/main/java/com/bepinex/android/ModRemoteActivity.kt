@@ -8,7 +8,6 @@ import androidx.activity.compose.setContent
 import androidx.compose.material3.Surface
 import com.bepinex.android.hooks.DeviceOrientationGate
 import com.bepinex.android.remote.ModSettingsClient
-import com.bepinex.android.remote.RemotePanelIpc
 import com.bepinex.android.settings.AppSettings
 import com.bepinex.android.ui.screens.ModRemoteScreen
 import com.bepinex.android.ui.theme.BepInExTheme
@@ -35,8 +34,6 @@ class ModRemoteActivity : ComponentActivity() {
             finish()
             return
         }
-        // File session kept for dual-path fallback until Binder path is proven.
-        RemotePanelIpc.writeSessionActive()
         settingsClient.bind(this)
         val themeMode = AppSettings.getThemeMode(this)
         val dynamicColor = AppSettings.isDynamicColorEnabled(this)
@@ -62,7 +59,6 @@ class ModRemoteActivity : ComponentActivity() {
         landscapeGate?.disable()
         landscapeGate = null
         settingsClient.unbind(this)
-        RemotePanelIpc.clearSession()
         super.onDestroy()
     }
 

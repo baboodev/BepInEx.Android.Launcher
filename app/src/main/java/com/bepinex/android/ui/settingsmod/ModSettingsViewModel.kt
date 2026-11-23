@@ -19,8 +19,6 @@ class ModSettingsViewModel(
         private set
     var status by mutableStateOf("Connecting…")
         private set
-    var usingFileFallback by mutableStateOf(false)
-        private set
     var lastError by mutableStateOf<String?>(null)
         private set
     var snackbar by mutableStateOf<String?>(null)
@@ -37,10 +35,10 @@ class ModSettingsViewModel(
         scope.launch {
             client.connected.collectLatest { connected ->
                 if (connected) {
-                    usingFileFallback = false
                     refreshAll()
                 } else {
                     status = "Mod not connected"
+                    schema = null
                 }
             }
         }
@@ -59,19 +57,19 @@ class ModSettingsViewModel(
                 val schemaJson = client.getSchema()
                 val parsed = ModSettingsJson.parseSchema(schemaJson)
                 if (parsed == null || parsed.controls.isEmpty()) {
-                    usingFileFallback = true
-                    status = "Using file fallback"
+                    schema = null
+                    status = "Mod not connected"
+                    lastError = "empty schema"
                     return@launch
                 }
                 schema = parsed
                 status = "Loading values…"
                 val valuesJson = client.getValues()
                 applyValuesJson(valuesJson)
-                usingFileFallback = false
                 status = "Connected (${parsed.controls.size} controls)"
             } catch (t: Throwable) {
-                usingFileFallback = true
-                status = "Using file fallback"
+                schema = null
+                status = "Mod not connected"
                 lastError = t.message
             }
         }
